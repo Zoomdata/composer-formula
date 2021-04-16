@@ -1,0 +1,537 @@
+# -*- coding: utf-8 -*-
+# vim: ft=yaml ts=2 sts=2 sw=2 et
+
+### The Zoomdata provisioning configuration example file
+### ====================================================
+###
+### This is Salt Pillar file written in SaltStack's (SLS) format:
+### a tree-like data structure in YAML rendered with Jinja2 templating engine.
+### https://docs.saltstack.com/en/latest/topics/tutorials/pillar.html
+### https://docs.saltstack.com/en/latest/topics/yaml/
+### https://docs.saltstack.com/en/latest/topics/jinja/
+###
+### It has default values for latest Generally Available Zoomdata release.
+### The settings for the last Long Term Supported release are coded within the
+### formula in the ``zoomdata/defaults.yaml`` file, which applies out of the
+### box unless redefined in the Pillar file.
+
+zoomdata:
+  ## Package installation settings
+  #
+  # Repository base URL where Zoomdata packages are hosted.
+  # This would be overridden if ``ZOOMDATA_REPOSITORY`` environment variable
+  # has been set for ``salt-minion`` process or ``salt-call`` command (in
+  # masterless mode).
+  base_url: 'http://repo.zoomdata.com'
+  # URL to the GnuPG public key for the repo/pkgs verification.
+  # Put ``None`` or empty string to skip GnuPG check (for internal repos).
+  gpgkey: 'https://repo.zoomdata.com/ZOOMDATA-GPG-KEY.pub'
+  # Repository branch from which the packages would be installed.
+  # This would be overridden by ``ZOOMDATA_RELEASE`` environment variable.
+  release: '6.6'
+
+  # Additional repositories under the ``base_url`` to get packages from
+  repositories:
+    - tools
+
+  # Release repository components to enable and install packages from
+  components:
+    - stable
+    #- unstable
+
+  # Enforce the state defined by configured Pillar values or provided defaults.
+  # Setting it to ``False`` changes the formula behaviour to "relaxed
+  # configuration management mode": detect installed packages and
+  # running services with only upgrading or restarting them if needed.
+  # Please note that it would not take effect during the first time
+  # provisioning until all configured services would be started.
+  enforce: True
+
+  # Remove Zoomdata services which HAVE NOT explicitly defined here or in the
+  # defaults. If set ``False``, remove all specified (or default) packages and
+  # disable corresponding services when manually calling ``zoomdata.remove``
+  # state.
+  erase: False
+
+  # Exact version of Zoomdata core packages to install, use ``latest``
+  # keyword to always upgrade to the latest minor version in the release.
+  # This would be overridden by ``ZOOMDATA_VERSION`` environment variable.
+  #version: '6.6.0'
+
+  # Zoomdata Core packages to install
+  packages:
+    - zoomdata
+    - zoomdata-query-engine
+    # The Admin and Configuration Servers share the exact same version as
+    # Zoomdata Core services.
+    #- zoomdata-admin-server
+    #- zoomdata-config-server
+
+  # Zoomdata EDC (Enterprise Data Connectors) section
+  edc:
+    # Exact version of Zoomdata EDC packages to install, use ``latest``
+    # keyword to always upgrade to the latest minor version in the release.
+    # This would be overridden by ``ZOOMDATA_EDC_VERSION`` environment variable.
+    #version: '6.6.0'
+
+    # Zoomdata EDC (datasource connector) packages to install
+    packages:
+      - zoomdata-edc-apache-solr
+      - zoomdata-edc-cloudera-search
+      - zoomdata-edc-elasticsearch-6.0
+      - zoomdata-edc-elasticsearch-7.0
+      - zoomdata-edc-hive
+      - zoomdata-edc-impala
+      - zoomdata-edc-memsql
+      - zoomdata-edc-mongo
+      - zoomdata-edc-mssql
+      - zoomdata-edc-mysql
+      - zoomdata-edc-oracle
+      - zoomdata-edc-phoenix-4.7-queryserver
+      - zoomdata-edc-postgresql
+      - zoomdata-edc-redshift
+      - zoomdata-edc-rts
+      - zoomdata-edc-sparksql
+    # It is possible to install all available connectors without a need to
+    # specify each one explicitly with just the following keyword:
+    #packages: 'all'
+
+    # Install JDBC jar drivers which are not packaged with Zoomdata connectors.
+    # More here: https://www.zoomdata.com/docs/3/Topics/Installation/adding-a-jdbc-driver.html
+    # This is an example for publicly available ElasticSearch X-PACK and MySQL drivers:
+    #jdbc:
+      #drivers:
+        #elasticsearch-6.0:
+          #- 'https://artifacts.elastic.co/maven/org/elasticsearch/client/x-pack-transport/6.0.0/x-pack-transport-6.0.0.jar'
+          #- 'https://artifacts.elastic.co/maven/org/elasticsearch/plugin/x-pack-api/6.0.0/x-pack-api-6.0.0.jar'
+          #- 'https://repo1.maven.org/maven2/com/unboundid/unboundid-ldapsdk/3.2.0/unboundid-ldapsdk-3.2.0.jar'
+        #memsql:
+          #- 'https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.13/mysql-connector-java-8.0.13.jar'
+        #mysql:
+          #- 'https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.13/mysql-connector-java-8.0.13.jar'
+
+    # Do the similar for other connectors which require external drivers.
+    # To actually make it work, set ``install`` to ``True``:
+      #install: True
+
+    # Liveness probe for connector after its start up
+    probe:
+      # How much time to wait in seconds. Set it up for the probing to work.
+      timeout: 120
+      # An URL path to query with HTTP request, which should response with
+      # status code 200.
+      path: 'actuator/health'
+
+  # Zoomdata microservices section
+  microservices:
+    # Exact version of Zoomdata microservice packages to install, use ``latest``
+    # keyword to always upgrade to the latest minor version in the release.
+    #version: '6.6.0'
+
+    # Zoomdata microservice packages to install
+    packages:
+      # The Consul service is mandatory for mutual discovery for all other
+      # Zoomdata services. It is just packaged separately from the Core.
+      - zoomdata-consul
+      - zoomdata-data-writer-postgresql
+      - zoomdata-screenshot-service
+      #- zoomdata-tracing-server
+
+  tools:
+    # Exact version of Zoomdata tools package to install, use ``latest``
+    # keyword to always upgrade to the latest minor version in the release.
+    #version: '1.0.0-stable'
+    packages:
+      - zoomdata-zdmanage
+
+  ## Configuration settings
+  #
+  # Global system limits for Zoomdata user (per-service limits for systemd based OS):
+  # https://www.zoomdata.com/docs/3/Topics/Installation/configure_maxOpenProcFiles.html
+  #limits:
+  #  nproc:
+  #    soft: '4096'
+  #    hard: '4096'
+  #  nofile:
+  #    soft: '1048576'
+  #    hard: '1048576'
+
+  # Environment variables per service.
+  #environment:
+    # Zoomdata Server
+    #zoomdata:
+    #  path: '/etc/zoomdata/zoomdata.env'
+    #  variables:
+    #    DISCOVERY_REGISTRY_HOST: 'localhost'
+    #    ACTIVITY_LOGGING_UNIFIED: 'true'
+    #    LOGGING_UNIFIED_HOST: 'localhost'
+    #    LOGGING_UNIFIED_LEVEL: 'INFO'
+    # Zoomdata Query Engine
+    #zoomdata-query-engine:
+    #  path: '/etc/zoomdata/query-engine.env'
+    #  variables:
+    #    DISCOVERY_REGISTRY_HOST: 'localhost'
+    #    SPARK_MASTER: spark://localhost:7077
+
+  # Configuration property files and their corresponding variables:
+  # https://www.zoomdata.com/docs/3/Topics/Config/config_props_vars.html
+  config:
+    # Zoomdata Web Server
+    zoomdata:
+      path: '/etc/zoomdata/zoomdata.properties'
+      properties:
+        ## Metadata DB connection details.
+        # (REMEMBER TO CHANGE VALUES BELOW IN ``postgres`` SECTION ACCORDINGLY!)
+        spring.datasource.url: 'jdbc:postgresql://localhost:5432/zoomdata'
+        spring.datasource.username: 'zoomdata'
+        spring.datasource.password: 'PleaseChangeMe'
+        # Keyset database credentials.
+        keyset.destination.params.jdbc_url: 'jdbc:postgresql://localhost:5432/zoomdata-keyset'
+        keyset.destination.params.user_name: 'zoomdata'
+        keyset.destination.params.password: 'PleaseChangeMe'
+        keyset.destination.schema: 'public'
+        # Data Writer credentials for saving flat file sources data
+        upload.destination.params.jdbc_url: 'jdbc:postgresql://localhost:5432/zoomdata-upload'
+        upload.destination.params.user_name: 'zoomdata'
+        upload.destination.params.password: 'PleaseChangeMe'
+        upload.destination.schema: 'public'
+        upload.batch-size: 1000
+        ## Screenshot Feature is enabled by default.
+        ## Look at these pages for instructions how to set it up on your platform:
+        ## https://www.zoomdata.com/docs/3/Topics/Installation/screenshot-for-rpm.html
+        #screenshot.daemon.enabled: False
+        #screenshot.daemon.schedule.rate: '24h'  # 1 day
+        #screenshots.dashboards.enabled: False
+        #screenshots.datasource-charts.enabled: False
+        ## Define custom HTTP(S) port
+        #server.port: 8080
+        ## Change default URL path
+        #server.servlet.context-path: /zoomdata
+        ## Web Server Content Security Policy (CSP):
+        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors
+        http.response.header.content-security-policy.frame-ancestors: 'self'
+        # Zoomdata Admin Service (Spring Boot Admin) related settings.
+        # This requires running ``zoomdata-admin-server`` service and valid user
+        # credentials set in Zoomdata after the first launch.
+        #actuator.user.name: 'admin'
+        #actuator.user.password: 'password'
+        #actuator.logging.external-file: '/opt/zoomdata/logs/zoomdata-actuator.log'
+      # Merge properties with hard-coded defaults. This is useful to skip
+      # common configuration values. Set ``False`` to disable such behavior.
+      merge: True
+      # Update the properties with ones given above. Do not remove locally
+      # modified properties. This is ``False`` by default (always replace).
+      update: False
+      # When updating the properties (set ``update: True``), discard locally
+      # modified properties with the same names (keys), literally update them
+      # all. Set ``False`` if you would like to keep local modifications, but
+      # add some options from above.
+      discard: True
+    # Configuration for Hashicorp's Consul distrubuted with Zoomdata
+    #zoomdata-consul:
+    #  path: '/etc/zoomdata/consul.json'
+    #  json:
+    #    data_dir: '/opt/zoomdata/data/consul'
+    #    client_addr: '0.0.0.0'
+    #    bind_addr: '127.0.0.1'
+    #    bootstrap: True
+    #    server: True
+    #    ui: True
+    # Zoomdata Query Engine
+    zoomdata-query-engine:
+      ## JVM options to start the service with
+      #options:
+        ## This is a mandatory JVM option
+        #- server
+        ## Java memory limits:
+        ## https://www.zoomdata.com/docs/3/Topics/Config/configuring-memory.html
+        #- Xms1g
+        ## You have 32 GiB of RAM and you want Zoomdata to be lightning fast
+        #- Xmx20g
+        #- XX:NewRatio=3
+        #- XX:+UseConcMarkSweepGC
+        #- XX:+HeapDumpOnOutOfMemoryError
+        #- XX:HeapDumpPath=temp/query-engine-dump
+        #- Djava.io.tmpdir=temp/query-engine
+        #- Dlog.console.level=OFF
+        #- Dlogback.console=OFF
+        #- Dfile.encoding=UTF-8
+        #- Duser.timezone=GMT
+        #- Dquery.engine.application.mode=default
+      path: '/etc/zoomdata/query-engine.properties'
+      properties:
+        # Persistent database cache settings
+        spring.qe.datasource.jdbcUrl: 'jdbc:postgresql://localhost:5432/zoomdata-qe'
+        spring.qe.datasource.username: 'zoomdata'
+        spring.qe.datasource.password: 'PleaseChangeMe'
+        # Maximum size of serialized data to be saved in Kb, defaults to 32 MiB
+        #topology.cache.db.max-cached-data-size-kb: 32768
+        # Interval to delete cached entries expired by TTL in milliseconds,
+        # defaults to 1 minute.
+        #topology.cache.db.cleanup-interval-ms: 60000
+        # TTL in minutes, defaults to 1 hour
+        #topology.cache.timeout: 60
+        # Maximum possible TTL in minutes, defaults to 1 week
+        #topology.cache.timeout.max: 10080
+        # Timeout to memorize DB cache metrics obtained as a result of SQL queries
+        # (size, storedSizeKb, rawSizeKb) in milliseconds, defaults to 1 minute.
+        #topology.cache.db.db-query-metric-memorize-timeout-ms: 60000
+    # Zoomdata Screenshot Service.
+    #zoomdata-screenshot-service:
+      #path: '/etc/zoomdata/screenshot-service.properties'
+      #properties:
+        ## This is an example of setting default timeouts for dashboards to render.
+        #screenshot.webdriver.timeout: 30
+        #export.dashboard.screenshot.timeout.seconds: 60
+        ## Google ChromeDriver options:
+        #driver.options: '--headless,--disable-gpu,--hide-scrollbars,--no-sandbox,--allow-insecure-localhost'
+    # Zoomdata Admin Server.
+    # Uncomment the section below to set up the user credentials for accessing
+    # the web UI.
+    #zoomdata-admin-server:
+      #path: '/etc/zoomdata/admin-server.properties'
+      #properties:
+        #monitor.user.name: 'admin'
+        #monitor.user.password: 'admin'
+    # Zoomdata Tracing Server.
+    # The example configuration below allows saving traces into locally
+    # installed ElasticSearch.
+    #zoomdata-tracing-server:
+      #path: '/etc/zoomdata/tracing-server.properties'
+      #properties:
+        #zipkin.storage.type: 'elasticsearch'
+        #zipkin.storage.elasticsearch.hosts: 'http://localhost:9200'
+        #storage.retention.removal.enabled: True
+        #storage.retention.days: 1
+
+  # Run post installation commands for each defined service before actually
+  # starting it
+  post_install:
+    zoomdata-screenshot-service:
+      # Install operating system specific packages, which the Screenshot
+      # Service depends on
+      - /opt/zoomdata/docs/screenshot-service/install-dependencies.sh
+
+  # Services to enable and start in order
+  services:
+    - zoomdata-consul  # always start it first
+
+    # The Configuration Server was added in Zoomdata release 4.0.0.
+    # It is disabled by default. If enabled, it must be started before
+    # all other Java (micro)services.
+    #- zoomdata-config-server
+
+    # The Tracing Service based on OpenZipkin is disabled by default.
+    # This is the second Java service required to be started among the others.
+    #- zoomdata-tracing-server
+
+    # EDC (Enterprise Data Connector) services. Some of them require licensed
+    # drivers which are not included into the distribution. You may need to
+    # install proper JDBC driver library file (see above).
+    - zoomdata-edc-apache-solr
+    - zoomdata-edc-cloudera-search
+    - zoomdata-edc-elasticsearch-6.0
+    - zoomdata-edc-elasticsearch-7.0
+    - zoomdata-edc-hive
+    - zoomdata-edc-impala
+    - zoomdata-edc-memsql
+    - zoomdata-edc-mongo
+    - zoomdata-edc-mssql
+    - zoomdata-edc-mysql
+    - zoomdata-edc-oracle
+    - zoomdata-edc-phoenix-4.7-queryserver
+    - zoomdata-edc-postgresql
+    - zoomdata-edc-redshift
+    - zoomdata-edc-rts
+    - zoomdata-edc-sparksql
+
+    - zoomdata-data-writer-postgresql
+    - zoomdata-screenshot-service
+
+    # Zoomdata Core
+    - zoomdata-query-engine
+    - zoomdata
+
+    # The Admin Service is based on Spring Boot Admin and disabled by default.
+    #- zoomdata-admin-server
+
+  # Use the keyword ``all`` instead of a explicit list to start all services
+  # which are specified to be installed above in ``packages`` sections:
+  #services: 'all'
+
+  # Perform additional post-installation setup
+  setup:
+    # Zoomdata Web server URI path to probe for readiness. The path is relative
+    # to the context path configured in the ``server.servlet.context-path``
+    # property for the ``zoomdata`` service. It is expected that HTTP GET
+    # request on given URL will return HTTP status code 200.
+    probe: 'api/version'
+  #  # How much time to wait in seconds until Zoomdata server would start to
+  #  # respond on HTTP probe and API calls.
+  #  timeout: 900
+  #  # Configure users for accessing Zoomdata web interface. Setting passwords
+  #  # for admin/supervisor is allowed only once after initial installation.
+  #  # The keyword ``random`` or empty value means generate random passwords and
+  #  # print them out as a ``Comment`` during the state run.
+  #  # All other setting below require ``supervisor`` user password set here.
+  #  passwords:
+  #    admin: random
+  #    supervisor: random
+  #  # Customize Zoomdata UI by providing CSS, login image and JSON file
+  #  branding:
+  #    css: salt://branding/files/custom.css
+  #    login_logo: salt://branding/files/Zoomdata.svg
+  #    file: salt://zoomdata/files/custom-ui-payload-sample.json
+  #  # Configure available connectors (connections to data sources).
+  #  connectors:
+  #    RFS_CSV: False
+  #    STREAMING_API: False
+  #  # Obtain Zoomdata license key from URL and install it into the server
+  #  license:
+  #    URL: 'http://licensing.server/api'
+  #    expirationDate: Null
+  #    licenseType: 'ZD'
+  #    userCount: '0'
+  #    concurrentSessionCount: '0'
+  #    enforcementLevel: 'AT'
+  #  # Configure server level variables (supervisor toggles)
+  #  toggles:
+  #    # Toggle off ability to create custom charts
+  #    custom-charts-enabled: False
+  #    # Remove tile provider choice
+  #    hide-tile-provider: False
+  #    # Remove administer option
+  #    show-administer-column: False
+
+  # Backup PostgreSQL databases which used by following services as
+  # metadata and persistent cache storage before upgrades.
+  # The dumps will be stored locally on machine running Zoomdata.
+  # These settings are applicable for ``zoomdata.backup`` states.
+  backup:
+    services:
+      # Specifying the services is mandatory for backups to be made.
+      # These services are expected to have open database connections and
+      # would be stopped prior to making a backup.
+      - zoomdata
+    # Use to define which databases need to be backed up from the services
+    # above. It requires you to have those services defined.
+    # Defaults to all.
+    # Set to ``Null`` if you do not want to make any database backups.
+    #databases:
+      #- zoomdata
+      #- zoomdata-keyset
+      #- zoomdata-upload
+    # Dump installation metadata in YAML (SLS) file that could be used as
+    # a source for Salt Pillar configuration, just like this file.
+    state: '99-backup'
+    # Where to put backup files. If not set or empty, there would be
+    # no backups.
+    destination: /opt/zoomdata/data/backups
+    # Create subdirectories under ``destination`` named as timestamps in
+    # specified format (Python's ``datetime.strptime``).
+    strptime: '%y-%m-%d_%H:%M:%S'
+    # How many recent backups to keep. Setting ``all`` means ALL!
+    retention: 10
+    # The PostgreSQL dump command with options to run on Zoomdata databases
+    bin: pg_dump --no-password --clean --if-exists --create
+    # Compress the dump file with following tool. Default is ``gzip``.
+    # Also supported compressors are: ``pigz``, ``[p]bzip2`` and ``[p]xz``.
+    compressor: pxz
+    # Additional command line options to use on compress/decompress.
+    # Use all CPU cores for parallel compression.
+    comp_opts: --threads {{ salt['status.nproc']() }}
+    # Extension or suffix to append to compressed dump file names.
+    # Better to align it with compression format defined above.
+    comp_ext: '_postgre.sql.xz'
+
+  # Use these settings to restore from previously made backup. They work only
+  # when the ``backup`` section above has defined and valid values.
+  # Apply the ``zoomdata.restore`` states to make restoration to local or
+  # remote PostgreSQL cluster.
+  restore:
+    # The PostgreSQL client binary with options if needed. The full path may
+    # be required for custom installations, i.e. ``/usr/pgsql-9.5/bin/psql``.
+    # Connection command line options for remote servers could be specified
+    # here as well.
+    bin: psql
+    # The client will connect to a PostgreSQL cluster with default
+    # authentication for this user. Usually it is ``peer`` authentication type
+    # on localhost. For other authentication options against remote servers,
+    # set ``root`` or ``Null`` here and look for relevant settings below.
+    # Also, this user would have group write permissions to the backup
+    # directory created. The group name must match the user name set here.
+    user: postgres
+    # The directory where Zoomdata service databases dumps are located
+    #dir: /opt/zoomdata/data/backups/18-01-31_12:01:08
+
+
+### PostgreSQL configuration for postgres-formula
+#
+# Salt Minion settings. PROVIDE ONLY FOR REMOTE POSTGRESQL CLUSTER.
+# These options are intended to be configured only when connecting to the
+# cluster being provisioned elsewhere, not the same machine that runs
+# Zoomdata. The ``peer`` authentication for ``postgres`` system user will be
+# used to access PostgreSQL server via local socket by default.
+# The user specified here should have administrative permissions to create
+# ROLES and DATABASES on given host. It is mandatory to specify at least
+# ``postgres.host`` and ``postgres.pass`` for backup restoration to work.
+#postgres.host: 'localhost'
+#postgres.port: '5432'
+#postgres.user: 'postgres'
+#postgres.pass: ''
+#postgres.maintenance_db: 'postgres'
+
+# Comment out the whole section to disable PostgreSQL installation and
+# configuration (depends on targeting set in the states ``top.sls`` file).
+# In that case, consider to configure the options above.
+
+postgres:
+  # Make sure we're installing PostgreSQL 12
+  version: 12
+  # Set linux alternatives priority higher than possibly previously installed PG9.5
+  linux:
+    altpriority: 60
+  # Create Zoomdata user and set password for the first time.
+  # The ``ZOOMDATA_POSTGRES_USER`` and ``ZOOMDATA_POSTGRES_PASS`` environment
+  # variables may override the defaults.
+  {%- set user = salt['environ.get']('ZOOMDATA_POSTGRES_USER', 'zoomdata') %}
+  {%- set pass = salt['environ.get']('ZOOMDATA_POSTGRES_PASS', 'PleaseChangeMe') %}
+  users:
+    {{ user }}:
+      ensure: present
+      default_password: {{ pass }}
+
+  # Create databases for Zoomdata services
+  databases:
+    zoomdata:
+      owner: {{ user }}
+    zoomdata-keyset:
+      owner: {{ user }}
+    zoomdata-qe:
+      owner: {{ user }}
+    zoomdata-upload:
+      owner: {{ user }}
+
+  # Backup extension for configuration files, defaults to ``.bak``.
+  # Set ``False`` to stop creation of backups when config files change.
+  config_backup: ".backup@{{ salt['status.time']('%y-%m-%d_%H:%M:%S') }}"
+
+  # Append the lines under this item to your postgresql.conf file.
+  # Pay attention to indent exactly with 4 spaces for all lines.
+  #postgresconf: |
+  #    listen_addresses = '*'  # listen on all interfaces
+
+  # This section covers ACL management in the `pg_hba.conf` file.
+  # acls list controls: which hosts are allowed to connect, how clients
+  # are authenticated, which PostgreSQL user names they can use, which
+  # databases they can access.
+  #
+  # If ``acls`` item value is empty ('', [], null), then the contents of
+  # ``pg_hba.conf`` file will not be touched at all.
+  #acls:
+  #  # "local" is for Unix domain socket connections only
+  #  - ['local', 'all', 'all', 'peer']
+  #  # IPv4 local connections:
+  #  - ['host', 'all', 'all', '127.0.0.1/32', 'md5']
+  #  # IPv6 local connections:
+  #  - ['host', 'all', 'all', '::1/128', 'md5']
