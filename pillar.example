@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # vim: ft=yaml ts=2 sts=2 sw=2 et
 
-### The Zoomdata provisioning configuration example file
+### The Composer provisioning configuration example file
 ### ====================================================
 ###
 ### This is Salt Pillar file written in SaltStack's (SLS) format:
@@ -10,24 +10,24 @@
 ### https://docs.saltstack.com/en/latest/topics/yaml/
 ### https://docs.saltstack.com/en/latest/topics/jinja/
 ###
-### It has default values for latest Generally Available Zoomdata release.
+### It has default values for latest Generally Available Composer release.
 ### The settings for the last Long Term Supported release are coded within the
-### formula in the ``zoomdata/defaults.yaml`` file, which applies out of the
+### formula in the ``composer/defaults.yaml`` file, which applies out of the
 ### box unless redefined in the Pillar file.
 
-zoomdata:
+composer:
   ## Package installation settings
   #
-  # Repository base URL where Zoomdata packages are hosted.
-  # This would be overridden if ``ZOOMDATA_REPOSITORY`` environment variable
+  # Repository base URL where Composer packages are hosted.
+  # This would be overridden if ``COMPOSER_REPOSITORY`` environment variable
   # has been set for ``salt-minion`` process or ``salt-call`` command (in
   # masterless mode).
-  base_url: 'http://repo.zoomdata.com'
+  base_url: 'http://repo.composer.com'
   # URL to the GnuPG public key for the repo/pkgs verification.
   # Put ``None`` or empty string to skip GnuPG check (for internal repos).
-  gpgkey: 'https://repo.zoomdata.com/ZOOMDATA-GPG-KEY.pub'
+  gpgkey: 'https://repo.composer.com/COMPOSER-GPG-KEY.pub'
   # Repository branch from which the packages would be installed.
-  # This would be overridden by ``ZOOMDATA_RELEASE`` environment variable.
+  # This would be overridden by ``COMPOSER_RELEASE`` environment variable.
   release: '6.6'
 
   # Additional repositories under the ``base_url`` to get packages from
@@ -47,57 +47,57 @@ zoomdata:
   # provisioning until all configured services would be started.
   enforce: True
 
-  # Remove Zoomdata services which HAVE NOT explicitly defined here or in the
+  # Remove Composer services which HAVE NOT explicitly defined here or in the
   # defaults. If set ``False``, remove all specified (or default) packages and
-  # disable corresponding services when manually calling ``zoomdata.remove``
+  # disable corresponding services when manually calling ``composer.remove``
   # state.
   erase: False
 
-  # Exact version of Zoomdata core packages to install, use ``latest``
+  # Exact version of Composer core packages to install, use ``latest``
   # keyword to always upgrade to the latest minor version in the release.
-  # This would be overridden by ``ZOOMDATA_VERSION`` environment variable.
+  # This would be overridden by ``COMPOSER_VERSION`` environment variable.
   #version: '6.6.0'
 
-  # Zoomdata Core packages to install
+  # Composer Core packages to install
   packages:
-    - zoomdata
-    - zoomdata-query-engine
+    - composer
+    - composer-query-engine
     # The Admin and Configuration Servers share the exact same version as
-    # Zoomdata Core services.
-    #- zoomdata-admin-server
-    #- zoomdata-config-server
+    # Composer Core services.
+    #- composer-admin-server
+    #- composer-config-server
 
-  # Zoomdata EDC (Enterprise Data Connectors) section
+  # Composer EDC (Enterprise Data Connectors) section
   edc:
-    # Exact version of Zoomdata EDC packages to install, use ``latest``
+    # Exact version of Composer EDC packages to install, use ``latest``
     # keyword to always upgrade to the latest minor version in the release.
-    # This would be overridden by ``ZOOMDATA_EDC_VERSION`` environment variable.
+    # This would be overridden by ``COMPOSER_EDC_VERSION`` environment variable.
     #version: '6.6.0'
 
-    # Zoomdata EDC (datasource connector) packages to install
+    # Composer EDC (datasource connector) packages to install
     packages:
-      - zoomdata-edc-apache-solr
-      - zoomdata-edc-cloudera-search
-      - zoomdata-edc-elasticsearch-6.0
-      - zoomdata-edc-elasticsearch-7.0
-      - zoomdata-edc-hive
-      - zoomdata-edc-impala
-      - zoomdata-edc-memsql
-      - zoomdata-edc-mongo
-      - zoomdata-edc-mssql
-      - zoomdata-edc-mysql
-      - zoomdata-edc-oracle
-      - zoomdata-edc-phoenix-4.7-queryserver
-      - zoomdata-edc-postgresql
-      - zoomdata-edc-redshift
-      - zoomdata-edc-rts
-      - zoomdata-edc-sparksql
+      - composer-edc-apache-solr
+      - composer-edc-cloudera-search
+      - composer-edc-elasticsearch-6.0
+      - composer-edc-elasticsearch-7.0
+      - composer-edc-hive
+      - composer-edc-impala
+      - composer-edc-memsql
+      - composer-edc-mongo
+      - composer-edc-mssql
+      - composer-edc-mysql
+      - composer-edc-oracle
+      - composer-edc-phoenix-4.7-queryserver
+      - composer-edc-postgresql
+      - composer-edc-redshift
+      - composer-edc-rts
+      - composer-edc-sparksql
     # It is possible to install all available connectors without a need to
     # specify each one explicitly with just the following keyword:
     #packages: 'all'
 
-    # Install JDBC jar drivers which are not packaged with Zoomdata connectors.
-    # More here: https://www.zoomdata.com/docs/3/Topics/Installation/adding-a-jdbc-driver.html
+    # Install JDBC jar drivers which are not packaged with Composer connectors.
+    # More here: https://www.composer.com/docs/3/Topics/Installation/adding-a-jdbc-driver.html
     # This is an example for publicly available ElasticSearch X-PACK and MySQL drivers:
     #jdbc:
       #drivers:
@@ -122,32 +122,32 @@ zoomdata:
       # status code 200.
       path: 'actuator/health'
 
-  # Zoomdata microservices section
+  # Composer microservices section
   microservices:
-    # Exact version of Zoomdata microservice packages to install, use ``latest``
+    # Exact version of Composer microservice packages to install, use ``latest``
     # keyword to always upgrade to the latest minor version in the release.
     #version: '6.6.0'
 
-    # Zoomdata microservice packages to install
+    # Composer microservice packages to install
     packages:
       # The Consul service is mandatory for mutual discovery for all other
-      # Zoomdata services. It is just packaged separately from the Core.
-      - zoomdata-consul
-      - zoomdata-data-writer-postgresql
-      - zoomdata-screenshot-service
-      #- zoomdata-tracing-server
+      # Composer services. It is just packaged separately from the Core.
+      - composer-consul
+      - composer-data-writer-postgresql
+      - composer-screenshot-service
+      #- composer-tracing-server
 
   tools:
-    # Exact version of Zoomdata tools package to install, use ``latest``
+    # Exact version of Composer tools package to install, use ``latest``
     # keyword to always upgrade to the latest minor version in the release.
     #version: '1.0.0-stable'
     packages:
-      - zoomdata-zdmanage
+      - composer-zdmanage
 
   ## Configuration settings
   #
-  # Global system limits for Zoomdata user (per-service limits for systemd based OS):
-  # https://www.zoomdata.com/docs/3/Topics/Installation/configure_maxOpenProcFiles.html
+  # Global system limits for Composer user (per-service limits for systemd based OS):
+  # https://www.composer.com/docs/3/Topics/Installation/configure_maxOpenProcFiles.html
   #limits:
   #  nproc:
   #    soft: '4096'
@@ -158,47 +158,47 @@ zoomdata:
 
   # Environment variables per service.
   #environment:
-    # Zoomdata Server
-    #zoomdata:
-    #  path: '/etc/zoomdata/zoomdata.env'
+    # Composer Server
+    #composer:
+    #  path: '/etc/composer/composer.env'
     #  variables:
     #    DISCOVERY_REGISTRY_HOST: 'localhost'
     #    ACTIVITY_LOGGING_UNIFIED: 'true'
     #    LOGGING_UNIFIED_HOST: 'localhost'
     #    LOGGING_UNIFIED_LEVEL: 'INFO'
-    # Zoomdata Query Engine
-    #zoomdata-query-engine:
-    #  path: '/etc/zoomdata/query-engine.env'
+    # Composer Query Engine
+    #composer-query-engine:
+    #  path: '/etc/composer/query-engine.env'
     #  variables:
     #    DISCOVERY_REGISTRY_HOST: 'localhost'
     #    SPARK_MASTER: spark://localhost:7077
 
   # Configuration property files and their corresponding variables:
-  # https://www.zoomdata.com/docs/3/Topics/Config/config_props_vars.html
+  # https://www.composer.com/docs/3/Topics/Config/config_props_vars.html
   config:
-    # Zoomdata Web Server
-    zoomdata:
-      path: '/etc/zoomdata/zoomdata.properties'
+    # Composer Web Server
+    composer:
+      path: '/etc/composer/composer.properties'
       properties:
         ## Metadata DB connection details.
         # (REMEMBER TO CHANGE VALUES BELOW IN ``postgres`` SECTION ACCORDINGLY!)
-        spring.datasource.url: 'jdbc:postgresql://localhost:5432/zoomdata'
-        spring.datasource.username: 'zoomdata'
+        spring.datasource.url: 'jdbc:postgresql://localhost:5432/composer'
+        spring.datasource.username: 'composer'
         spring.datasource.password: 'PleaseChangeMe'
         # Keyset database credentials.
-        keyset.destination.params.jdbc_url: 'jdbc:postgresql://localhost:5432/zoomdata-keyset'
-        keyset.destination.params.user_name: 'zoomdata'
+        keyset.destination.params.jdbc_url: 'jdbc:postgresql://localhost:5432/composer-keyset'
+        keyset.destination.params.user_name: 'composer'
         keyset.destination.params.password: 'PleaseChangeMe'
         keyset.destination.schema: 'public'
         # Data Writer credentials for saving flat file sources data
-        upload.destination.params.jdbc_url: 'jdbc:postgresql://localhost:5432/zoomdata-upload'
-        upload.destination.params.user_name: 'zoomdata'
+        upload.destination.params.jdbc_url: 'jdbc:postgresql://localhost:5432/composer-upload'
+        upload.destination.params.user_name: 'composer'
         upload.destination.params.password: 'PleaseChangeMe'
         upload.destination.schema: 'public'
         upload.batch-size: 1000
         ## Screenshot Feature is enabled by default.
         ## Look at these pages for instructions how to set it up on your platform:
-        ## https://www.zoomdata.com/docs/3/Topics/Installation/screenshot-for-rpm.html
+        ## https://www.composer.com/docs/3/Topics/Installation/screenshot-for-rpm.html
         #screenshot.daemon.enabled: False
         #screenshot.daemon.schedule.rate: '24h'  # 1 day
         #screenshots.dashboards.enabled: False
@@ -206,16 +206,16 @@ zoomdata:
         ## Define custom HTTP(S) port
         #server.port: 8080
         ## Change default URL path
-        #server.servlet.context-path: /zoomdata
+        #server.servlet.context-path: /composer
         ## Web Server Content Security Policy (CSP):
         # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors
         http.response.header.content-security-policy.frame-ancestors: 'self'
-        # Zoomdata Admin Service (Spring Boot Admin) related settings.
-        # This requires running ``zoomdata-admin-server`` service and valid user
-        # credentials set in Zoomdata after the first launch.
+        # Composer Admin Service (Spring Boot Admin) related settings.
+        # This requires running ``composer-admin-server`` service and valid user
+        # credentials set in Composer after the first launch.
         #actuator.user.name: 'admin'
         #actuator.user.password: 'password'
-        #actuator.logging.external-file: '/opt/zoomdata/logs/zoomdata-actuator.log'
+        #actuator.logging.external-file: '/opt/composer/logs/composer-actuator.log'
       # Merge properties with hard-coded defaults. This is useful to skip
       # common configuration values. Set ``False`` to disable such behavior.
       merge: True
@@ -227,26 +227,26 @@ zoomdata:
       # all. Set ``False`` if you would like to keep local modifications, but
       # add some options from above.
       discard: True
-    # Configuration for Hashicorp's Consul distrubuted with Zoomdata
-    #zoomdata-consul:
-    #  path: '/etc/zoomdata/consul.json'
+    # Configuration for Hashicorp's Consul distrubuted with Composer
+    #composer-consul:
+    #  path: '/etc/composer/consul.json'
     #  json:
-    #    data_dir: '/opt/zoomdata/data/consul'
+    #    data_dir: '/opt/composer/data/consul'
     #    client_addr: '0.0.0.0'
     #    bind_addr: '127.0.0.1'
     #    bootstrap: True
     #    server: True
     #    ui: True
-    # Zoomdata Query Engine
-    zoomdata-query-engine:
+    # Composer Query Engine
+    composer-query-engine:
       ## JVM options to start the service with
       #options:
         ## This is a mandatory JVM option
         #- server
         ## Java memory limits:
-        ## https://www.zoomdata.com/docs/3/Topics/Config/configuring-memory.html
+        ## https://www.composer.com/docs/3/Topics/Config/configuring-memory.html
         #- Xms1g
-        ## You have 32 GiB of RAM and you want Zoomdata to be lightning fast
+        ## You have 32 GiB of RAM and you want Composer to be lightning fast
         #- Xmx20g
         #- XX:NewRatio=3
         #- XX:+UseConcMarkSweepGC
@@ -258,11 +258,11 @@ zoomdata:
         #- Dfile.encoding=UTF-8
         #- Duser.timezone=GMT
         #- Dquery.engine.application.mode=default
-      path: '/etc/zoomdata/query-engine.properties'
+      path: '/etc/composer/query-engine.properties'
       properties:
         # Persistent database cache settings
-        spring.qe.datasource.jdbcUrl: 'jdbc:postgresql://localhost:5432/zoomdata-qe'
-        spring.qe.datasource.username: 'zoomdata'
+        spring.qe.datasource.jdbcUrl: 'jdbc:postgresql://localhost:5432/composer-qe'
+        spring.qe.datasource.username: 'composer'
         spring.qe.datasource.password: 'PleaseChangeMe'
         # Maximum size of serialized data to be saved in Kb, defaults to 32 MiB
         #topology.cache.db.max-cached-data-size-kb: 32768
@@ -276,28 +276,28 @@ zoomdata:
         # Timeout to memorize DB cache metrics obtained as a result of SQL queries
         # (size, storedSizeKb, rawSizeKb) in milliseconds, defaults to 1 minute.
         #topology.cache.db.db-query-metric-memorize-timeout-ms: 60000
-    # Zoomdata Screenshot Service.
-    #zoomdata-screenshot-service:
-      #path: '/etc/zoomdata/screenshot-service.properties'
+    # Composer Screenshot Service.
+    #composer-screenshot-service:
+      #path: '/etc/composer/screenshot-service.properties'
       #properties:
         ## This is an example of setting default timeouts for dashboards to render.
         #screenshot.webdriver.timeout: 30
         #export.dashboard.screenshot.timeout.seconds: 60
         ## Google ChromeDriver options:
         #driver.options: '--headless,--disable-gpu,--hide-scrollbars,--no-sandbox,--allow-insecure-localhost'
-    # Zoomdata Admin Server.
+    # Composer Admin Server.
     # Uncomment the section below to set up the user credentials for accessing
     # the web UI.
-    #zoomdata-admin-server:
-      #path: '/etc/zoomdata/admin-server.properties'
+    #composer-admin-server:
+      #path: '/etc/composer/admin-server.properties'
       #properties:
         #monitor.user.name: 'admin'
         #monitor.user.password: 'admin'
-    # Zoomdata Tracing Server.
+    # Composer Tracing Server.
     # The example configuration below allows saving traces into locally
     # installed ElasticSearch.
-    #zoomdata-tracing-server:
-      #path: '/etc/zoomdata/tracing-server.properties'
+    #composer-tracing-server:
+      #path: '/etc/composer/tracing-server.properties'
       #properties:
         #zipkin.storage.type: 'elasticsearch'
         #zipkin.storage.elasticsearch.hosts: 'http://localhost:9200'
@@ -307,53 +307,53 @@ zoomdata:
   # Run post installation commands for each defined service before actually
   # starting it
   post_install:
-    zoomdata-screenshot-service:
+    composer-screenshot-service:
       # Install operating system specific packages, which the Screenshot
       # Service depends on
-      - /opt/zoomdata/docs/screenshot-service/install-dependencies.sh
+      - /opt/composer/docs/screenshot-service/install-dependencies.sh
 
   # Services to enable and start in order
   services:
-    - zoomdata-consul  # always start it first
+    - composer-consul  # always start it first
 
-    # The Configuration Server was added in Zoomdata release 4.0.0.
+    # The Configuration Server was added in Composer release 4.0.0.
     # It is disabled by default. If enabled, it must be started before
     # all other Java (micro)services.
-    #- zoomdata-config-server
+    #- composer-config-server
 
     # The Tracing Service based on OpenZipkin is disabled by default.
     # This is the second Java service required to be started among the others.
-    #- zoomdata-tracing-server
+    #- composer-tracing-server
 
     # EDC (Enterprise Data Connector) services. Some of them require licensed
     # drivers which are not included into the distribution. You may need to
     # install proper JDBC driver library file (see above).
-    - zoomdata-edc-apache-solr
-    - zoomdata-edc-cloudera-search
-    - zoomdata-edc-elasticsearch-6.0
-    - zoomdata-edc-elasticsearch-7.0
-    - zoomdata-edc-hive
-    - zoomdata-edc-impala
-    - zoomdata-edc-memsql
-    - zoomdata-edc-mongo
-    - zoomdata-edc-mssql
-    - zoomdata-edc-mysql
-    - zoomdata-edc-oracle
-    - zoomdata-edc-phoenix-4.7-queryserver
-    - zoomdata-edc-postgresql
-    - zoomdata-edc-redshift
-    - zoomdata-edc-rts
-    - zoomdata-edc-sparksql
+    - composer-edc-apache-solr
+    - composer-edc-cloudera-search
+    - composer-edc-elasticsearch-6.0
+    - composer-edc-elasticsearch-7.0
+    - composer-edc-hive
+    - composer-edc-impala
+    - composer-edc-memsql
+    - composer-edc-mongo
+    - composer-edc-mssql
+    - composer-edc-mysql
+    - composer-edc-oracle
+    - composer-edc-phoenix-4.7-queryserver
+    - composer-edc-postgresql
+    - composer-edc-redshift
+    - composer-edc-rts
+    - composer-edc-sparksql
 
-    - zoomdata-data-writer-postgresql
-    - zoomdata-screenshot-service
+    - composer-data-writer-postgresql
+    - composer-screenshot-service
 
-    # Zoomdata Core
-    - zoomdata-query-engine
-    - zoomdata
+    # Composer Core
+    - composer-query-engine
+    - composer
 
     # The Admin Service is based on Spring Boot Admin and disabled by default.
-    #- zoomdata-admin-server
+    #- composer-admin-server
 
   # Use the keyword ``all`` instead of a explicit list to start all services
   # which are specified to be installed above in ``packages`` sections:
@@ -361,15 +361,15 @@ zoomdata:
 
   # Perform additional post-installation setup
   setup:
-    # Zoomdata Web server URI path to probe for readiness. The path is relative
+    # Composer Web server URI path to probe for readiness. The path is relative
     # to the context path configured in the ``server.servlet.context-path``
-    # property for the ``zoomdata`` service. It is expected that HTTP GET
+    # property for the ``composer`` service. It is expected that HTTP GET
     # request on given URL will return HTTP status code 200.
     probe: 'api/version'
-  #  # How much time to wait in seconds until Zoomdata server would start to
+  #  # How much time to wait in seconds until Composer server would start to
   #  # respond on HTTP probe and API calls.
   #  timeout: 900
-  #  # Configure users for accessing Zoomdata web interface. Setting passwords
+  #  # Configure users for accessing Composer web interface. Setting passwords
   #  # for admin/supervisor is allowed only once after initial installation.
   #  # The keyword ``random`` or empty value means generate random passwords and
   #  # print them out as a ``Comment`` during the state run.
@@ -377,16 +377,16 @@ zoomdata:
   #  passwords:
   #    admin: random
   #    supervisor: random
-  #  # Customize Zoomdata UI by providing CSS, login image and JSON file
+  #  # Customize Composer UI by providing CSS, login image and JSON file
   #  branding:
   #    css: salt://branding/files/custom.css
-  #    login_logo: salt://branding/files/Zoomdata.svg
-  #    file: salt://zoomdata/files/custom-ui-payload-sample.json
+  #    login_logo: salt://branding/files/Composer.svg
+  #    file: salt://composer/files/custom-ui-payload-sample.json
   #  # Configure available connectors (connections to data sources).
   #  connectors:
   #    RFS_CSV: False
   #    STREAMING_API: False
-  #  # Obtain Zoomdata license key from URL and install it into the server
+  #  # Obtain Composer license key from URL and install it into the server
   #  license:
   #    URL: 'http://licensing.server/api'
   #    expirationDate: Null
@@ -405,34 +405,34 @@ zoomdata:
 
   # Backup PostgreSQL databases which used by following services as
   # metadata and persistent cache storage before upgrades.
-  # The dumps will be stored locally on machine running Zoomdata.
-  # These settings are applicable for ``zoomdata.backup`` states.
+  # The dumps will be stored locally on machine running Composer.
+  # These settings are applicable for ``composer.backup`` states.
   backup:
     services:
       # Specifying the services is mandatory for backups to be made.
       # These services are expected to have open database connections and
       # would be stopped prior to making a backup.
-      - zoomdata
+      - composer
     # Use to define which databases need to be backed up from the services
     # above. It requires you to have those services defined.
     # Defaults to all.
     # Set to ``Null`` if you do not want to make any database backups.
     #databases:
-      #- zoomdata
-      #- zoomdata-keyset
-      #- zoomdata-upload
+      #- composer
+      #- composer-keyset
+      #- composer-upload
     # Dump installation metadata in YAML (SLS) file that could be used as
     # a source for Salt Pillar configuration, just like this file.
     state: '99-backup'
     # Where to put backup files. If not set or empty, there would be
     # no backups.
-    destination: /opt/zoomdata/data/backups
+    destination: /opt/composer/data/backups
     # Create subdirectories under ``destination`` named as timestamps in
     # specified format (Python's ``datetime.strptime``).
     strptime: '%y-%m-%d_%H:%M:%S'
     # How many recent backups to keep. Setting ``all`` means ALL!
     retention: 10
-    # The PostgreSQL dump command with options to run on Zoomdata databases
+    # The PostgreSQL dump command with options to run on Composer databases
     bin: pg_dump --no-password --clean --if-exists --create
     # Compress the dump file with following tool. Default is ``gzip``.
     # Also supported compressors are: ``pigz``, ``[p]bzip2`` and ``[p]xz``.
@@ -446,7 +446,7 @@ zoomdata:
 
   # Use these settings to restore from previously made backup. They work only
   # when the ``backup`` section above has defined and valid values.
-  # Apply the ``zoomdata.restore`` states to make restoration to local or
+  # Apply the ``composer.restore`` states to make restoration to local or
   # remote PostgreSQL cluster.
   restore:
     # The PostgreSQL client binary with options if needed. The full path may
@@ -461,8 +461,8 @@ zoomdata:
     # Also, this user would have group write permissions to the backup
     # directory created. The group name must match the user name set here.
     user: postgres
-    # The directory where Zoomdata service databases dumps are located
-    #dir: /opt/zoomdata/data/backups/18-01-31_12:01:08
+    # The directory where Composer service databases dumps are located
+    #dir: /opt/composer/data/backups/18-01-31_12:01:08
 
 
 ### PostgreSQL configuration for postgres-formula
@@ -470,7 +470,7 @@ zoomdata:
 # Salt Minion settings. PROVIDE ONLY FOR REMOTE POSTGRESQL CLUSTER.
 # These options are intended to be configured only when connecting to the
 # cluster being provisioned elsewhere, not the same machine that runs
-# Zoomdata. The ``peer`` authentication for ``postgres`` system user will be
+# Composer. The ``peer`` authentication for ``postgres`` system user will be
 # used to access PostgreSQL server via local socket by default.
 # The user specified here should have administrative permissions to create
 # ROLES and DATABASES on given host. It is mandatory to specify at least
@@ -491,25 +491,25 @@ postgres:
   # Set linux alternatives priority higher than possibly previously installed PG9.5
   linux:
     altpriority: 60
-  # Create Zoomdata user and set password for the first time.
-  # The ``ZOOMDATA_POSTGRES_USER`` and ``ZOOMDATA_POSTGRES_PASS`` environment
+  # Create Composer user and set password for the first time.
+  # The ``COMPOSER_POSTGRES_USER`` and ``COMPOSER_POSTGRES_PASS`` environment
   # variables may override the defaults.
-  {%- set user = salt['environ.get']('ZOOMDATA_POSTGRES_USER', 'zoomdata') %}
-  {%- set pass = salt['environ.get']('ZOOMDATA_POSTGRES_PASS', 'PleaseChangeMe') %}
+  {%- set user = salt['environ.get']('COMPOSER_POSTGRES_USER', 'composer') %}
+  {%- set pass = salt['environ.get']('COMPOSER_POSTGRES_PASS', 'PleaseChangeMe') %}
   users:
     {{ user }}:
       ensure: present
       default_password: {{ pass }}
 
-  # Create databases for Zoomdata services
+  # Create databases for Composer services
   databases:
-    zoomdata:
+    composer:
       owner: {{ user }}
-    zoomdata-keyset:
+    composer-keyset:
       owner: {{ user }}
-    zoomdata-qe:
+    composer-qe:
       owner: {{ user }}
-    zoomdata-upload:
+    composer-upload:
       owner: {{ user }}
 
   # Backup extension for configuration files, defaults to ``.bak``.

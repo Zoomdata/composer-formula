@@ -1,28 +1,26 @@
-{%- from 'zoomdata/map.jinja' import postgres, zoomdata %}
+{%- from 'composer/map.jinja' import postgres, composer %}
 
-{%- if zoomdata.backup['destination'] and zoomdata.backup['services'] -%}
+{%- if composer.backup['destination'] and composer.backup['services'] -%}
 
-  {%- set backup_dir = salt['file.join'](zoomdata.backup['destination'],
-                                         salt['grains.get']('zoomdata:backup:latest', 'latest')) %}
-zoomdata_backup_compressor:
+  {%- set backup_dir = salt['file.join'](composer.backup['destination'],
+                                         salt['grains.get']('composer:backup:latest', 'latest')) %}
+composer_backup_compressor:
   pkg.installed:
-    - name: {{ zoomdata.backup['compressor'] }}
+    - name: {{ composer.backup['compressor'] }}
     - onchanges:
-      - file: zoomdata_backup_dir
+      - file: composer_backup_dir
 
-  {%- for service in zoomdata.backup['services'] %}
+  {%- for service in composer.backup['services'] %}
     {#- Read service config to retrieve DB connection details later #}
-    {%- set config = zoomdata.local.config.get(service, {}).properties|
+    {%- set config = composer.local.config.get(service, {}).properties|
                      default({}, true) %}
 
-{#-
-Detect if the service configured for backup would be upgraded
-during ``zoomdata.services`` SLS run. This will trigger the backup process.
+{# Detect if the service configured for backup would be upgraded
+during ``composer.services`` SLS run. This will trigger the backup process.
 Nothing would happen if nothing to upgrade.
-If called directly as ``state.apply zoomdata.backup``, always do the backup.
-#}
+If called directly as ``state.apply composer.backup``, always do the backup. #}
 
-    {%- for properties in postgres['zoomdata_properties'] %}
+    {%- for properties in postgres['composer_properties'] %}
       {#- The full set of properties: url, user and pw need to be configured #}
       {%- set has_properties = [true] %}
       {%- for property in properties %}
@@ -39,27 +37,27 @@ If called directly as ``state.apply zoomdata.backup``, always do the backup.
 
         {#- Backup all DBs configured for the service,
            or only those which explicitly defined. #}
-        {%- if zoomdata.backup['databases']|default(none) == [] or
-               database in zoomdata.backup['databases']|default([], true) %}
+        {%- if composer.backup['databases']|default(none) == [] or
+               database in composer.backup['databases']|default([], true) %}
 
 {{ database }}_db_backup:
   cmd.run:
     - name: >-
-        {{ zoomdata.backup['bin'] }}
+        {{ composer.backup['bin'] }}
         {{ connection_uri }} |
-        {{ zoomdata.backup['compressor'] }}
-        --stdout {{ zoomdata.backup['comp_opts'] }} >
-        {{ salt['file.join'](backup_dir, database ~ zoomdata.backup['comp_ext']) }}
+        {{ composer.backup['compressor'] }}
+        --stdout {{ composer.backup['comp_opts'] }} >
+        {{ salt['file.join'](backup_dir, database ~ composer.backup['comp_ext']) }}
     - env:
       - PGUSER: {{ user|yaml() }}
       - PGPASSWORD: {{ password|yaml() }}
     # Files should be owned by user
     # who would be able to read them on restoration.
-    - runas: {{ zoomdata.restore['user'] }}
+    - runas: {{ composer.restore['user'] }}
     - require:
-      - pkg: zoomdata_backup_compressor
+      - pkg: composer_backup_compressor
     - onchanges:
-      - file: zoomdata_backup_dir
+      - file: composer_backup_dir
     # Stop highstate execution if backup has failed
     - failhard: True
 

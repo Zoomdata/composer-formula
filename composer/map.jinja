@@ -1,104 +1,104 @@
-{% import_yaml 'zoomdata/defaults.yaml' as defaults %}
-{% import_yaml 'zoomdata/osfamily_map.yaml' as osfamily_map %}
+{% import_yaml 'composer/defaults.yaml' as defaults %}
+{% import_yaml 'composer/osfamily_map.yaml' as osfamily_map %}
 
 {# Merge Pillar items with defaults #}
-{% set zoomdata = salt['pillar.get'](
-    'zoomdata',
-    default=defaults.zoomdata,
+{% set composer = salt['pillar.get'](
+    'composer',
+    default=defaults.composer,
     merge=true,
 ) %}
 
 {# Make sure EDC, MS and tools dicts always exist #}
-{% do zoomdata.update({
-    'edc': zoomdata.edc|default({}, true),
-    'microservices': zoomdata.microservices|default({}, true),
-    'tools': zoomdata.tools|default(defaults.zoomdata.tools, true),
+{% do composer.update({
+    'edc': composer.edc|default({}, true),
+    'microservices': composer.microservices|default({}, true),
+    'tools': composer.tools|default(defaults.composer.tools, true),
 }) %}
 
 {# Install our module to gather data #}
-{% if salt['zoomdata.inspect']|default(none) is not callable %}
+{% if salt['composer.inspect']|default(none) is not callable %}
     {% do salt['saltutil.sync_modules']() %}
 {% endif %}
 
 {# Try to inspect local installation #}
-{% do zoomdata.update({
-    'local': salt['zoomdata.inspect'](versions=true, full=true)['zoomdata'],
+{% do composer.update({
+    'local': salt['composer.inspect'](versions=true, full=true)['composer'],
 }) %}
 
 {# Make sure we have finished bootstrapping when some packages were
    already installed. #}
-{% set local_packages = zoomdata.local['packages']
-                        + zoomdata.local.edc['packages']
-                        + zoomdata.local.microservices['packages'] %}
+{% set local_packages = composer.local['packages']
+                        + composer.local.edc['packages']
+                        + composer.local.microservices['packages'] %}
 
-{% do zoomdata.update({
+{% do composer.update({
     'bootstrap': local_packages == [] or
-                 salt['grains.get']('zoomdata:bootstrap', false),
+                 salt['grains.get']('composer:bootstrap', false),
 }) %}
 
 {# Read envrionment variables #}
-{% do zoomdata.update({
-    'base_url': salt['environ.get']('ZOOMDATA_REPOSITORY', zoomdata['base_url']),
-    'release':  salt['environ.get']('ZOOMDATA_RELEASE', zoomdata['release'])|string(),
+{% do composer.update({
+    'base_url': salt['environ.get']('COMPOSER_REPOSITORY', composer['base_url']),
+    'release':  salt['environ.get']('COMPOSER_RELEASE', composer['release'])|string(),
 }) %}
 
 {# Detect release upgrades or repo changes #}
-{% do zoomdata.update({
-    'upgrade': not zoomdata['bootstrap'] and (
-               zoomdata['release'] == 'latest' or
-               zoomdata['release'] != zoomdata.local['release'] or
-               zoomdata['base_url'] != zoomdata.local['base_url']
+{% do composer.update({
+    'upgrade': not composer['bootstrap'] and (
+               composer['release'] == 'latest' or
+               composer['release'] != composer.local['release'] or
+               composer['base_url'] != composer.local['base_url']
                ),
 }) %}
 
-{% if not zoomdata['bootstrap'] and not zoomdata['enforce'] %}
+{% if not composer['bootstrap'] and not composer['enforce'] %}
     {# Bypass state enforcement: work only with locally installed and
        running services. #}
-    {% if not zoomdata['upgrade'] %}
+    {% if not composer['upgrade'] %}
         {# Keep core packages and services only within minor (by SemVer)
            version number, i.e. release cycle. #}
-        {% do zoomdata.update({
-            'packages': zoomdata.local['packages'],
-            'services': zoomdata.local['services'],
+        {% do composer.update({
+            'packages': composer.local['packages'],
+            'services': composer.local['services'],
         }) %}
     {% endif %}
     {# EDC (connectors) are preserved between releases #}
-    {% do zoomdata.edc.update({
-        'packages': zoomdata.local.edc['packages']
+    {% do composer.edc.update({
+        'packages': composer.local.edc['packages']
     }) %}
 {% endif %}
 
 {# Read envrionment variables #}
-{% do zoomdata.update({
-    'version':  salt['environ.get']('ZOOMDATA_VERSION', zoomdata.get('version')),
-    'packages': salt['environ.get']('ZOOMDATA_PACKAGES', zoomdata.get('packages')),
-    'services': salt['environ.get']('ZOOMDATA_SERVICES', zoomdata.get('services')),
+{% do composer.update({
+    'version':  salt['environ.get']('COMPOSER_VERSION', composer.get('version')),
+    'packages': salt['environ.get']('COMPOSER_PACKAGES', composer.get('packages')),
+    'services': salt['environ.get']('COMPOSER_SERVICES', composer.get('services')),
 }) %}
 
 {# Merge in OS specific defaults #}
-{% set zoomdata = salt['grains.filter_by'](
+{% set composer = salt['grains.filter_by'](
     osfamily_map,
     grain='os_family',
-    merge=zoomdata,
+    merge=composer,
 ) %}
 
 {# Read EDC environment variables #}
-{% do zoomdata.edc.update({
-    'packages': salt['environ.get']('ZOOMDATA_EDC_PACKAGES', zoomdata.edc.get('packages')),
-    'version':  salt['environ.get']('ZOOMDATA_EDC_VERSION', zoomdata.edc.get('version')),
+{% do composer.edc.update({
+    'packages': salt['environ.get']('COMPOSER_EDC_PACKAGES', composer.edc.get('packages')),
+    'version':  salt['environ.get']('COMPOSER_EDC_VERSION', composer.edc.get('version')),
 }) %}
 
-{# Fix short names for Zoomdata sevices and connectors by appending
+{# Fix short names for Composer sevices and connectors by appending
    approptiate prefix to each package and service defined via environment
    variable. #}
 {% for group, prefix in (
-        (none, 'zoomdata'),
-        ('edc', 'zoomdata-edc'),
-        ('microservices', 'zoomdata'),
-        ('tools', 'zoomdata')
+        (none, 'composer'),
+        ('edc', 'composer-edc'),
+        ('microservices', 'composer'),
+        ('tools', 'composer')
 ) %}
     {% for item in ('packages', 'services') %}
-        {% set map = zoomdata.get(group, zoomdata) %}
+        {% set map = composer.get(group, composer) %}
         {% set value = map.get(item) %}
         {% set items = value %}
         {% if value is string %}
@@ -116,57 +116,57 @@
         {% endfor %}
         {% set param = {item: srvs} %}
         {% if group %}
-            {% do zoomdata[group].update(param) %}
+            {% do composer[group].update(param) %}
         {% else %}
-            {% do zoomdata.update(param) %}
+            {% do composer.update(param) %}
         {% endif %}
     {% endfor %}
 {% endfor %}
 
 {# Create an ordered list of all packages to iterate in start/stop states #}
-{% set packages = zoomdata.microservices['packages']
-                  + zoomdata.edc['packages']
-                  + zoomdata['packages'] %}
+{% set packages = composer.microservices['packages']
+                  + composer.edc['packages']
+                  + composer['packages'] %}
 
 {# Start all configured service packages.
-   The keyword ``zoomdata-all`` will be created from ``all`` by the loop above. #}
-{% if 'zoomdata-all' in zoomdata['services'] %}
-    {% do zoomdata.update({'services': packages}) %}
+   The keyword ``composer-all`` will be created from ``all`` by the loop above. #}
+{% if 'composer-all' in composer['services'] %}
+    {% do composer.update({'services': packages}) %}
 {% endif %}
 
 {% for params in ('backup', 'restore') %}
-    {% if zoomdata[params] is not mapping %}
+    {% if composer[params] is not mapping %}
         {# Reload defaults if nested dictionary with parameters is messy #}
-        {% do zoomdata.update({params: defaults.zoomdata[params]}) %}
+        {% do composer.update({params: defaults.composer[params]}) %}
     {% endif %}
 {% endfor %}
 
 {# Process properties #}
-{% for service, config in zoomdata.config|default({}, true)|dictsort() %}
+{% for service, config in composer.config|default({}, true)|dictsort() %}
     {% if config.properties|default({}, true) and not config['merge']|default(true) %}
         {# Drop default properties if we don't want to merge them #}
-        {% set properties = salt['pillar.get']('zoomdata:config:' ~ service ~ ':properties', {}) %}
-        {% do zoomdata.config[service].update({'properties': properties}) %}
+        {% set properties = salt['pillar.get']('composer:config:' ~ service ~ ':properties', {}) %}
+        {% do composer.config[service].update({'properties': properties}) %}
     {% endif %}
 
     {% if config['update']|default(false) %}
-        {% set local_config = zoomdata.local.config[service]|default({}, true) %}
+        {% set local_config = composer.local.config[service]|default({}, true) %}
         {% set local_properties = local_config.properties|default({}, true) %}
-        {% set properties = zoomdata.config[service].properties|default({}, true) %}
+        {% set properties = composer.config[service].properties|default({}, true) %}
         {% if config['discard']|default(true) %}
             {# Read local properties and update them with provided values #}
             {% do local_properties.update(properties) %}
-            {% do zoomdata.config[service].update({'properties': local_properties}) %}
+            {% do composer.config[service].update({'properties': local_properties}) %}
         {% else %}
             {# Filter out default or Pillar provided properties and only add new ones #}
             {% do properties.update(local_properties) %}
-            {% do zoomdata.config[service].update({'properties': properties}) %}
+            {% do composer.config[service].update({'properties': properties}) %}
         {% endif %}
     {% endif %}
 {% endfor %}
 
 {# Configure connection to Consul via environment variable #}
-{% set consul_addr = salt['environ.get']('ZOOMDATA_CONSUL_ADDRESS') %}
+{% set consul_addr = salt['environ.get']('COMPOSER_CONSUL_ADDRESS') %}
 {% if consul_addr %}
     {% if ':' not in consul_addr %}
         {% set consul_addr = consul_addr ~ ':' %}
@@ -177,22 +177,22 @@
         {% do props.update({'discovery.registry.port': consul_port}) %}
     {% endif %}
     {% set configs = {} %}
-    {% for service in zoomdata['services'] %}
-        {% if service == 'zoomdata' %}
+    {% for service in composer['services'] %}
+        {% if service == 'composer' %}
             {% set file = service ~ '.properties' %}
         {% else %}
-            {% set file = service|replace('zoomdata-', '', 1) ~ '.properties' %}
+            {% set file = service|replace('composer-', '', 1) ~ '.properties' %}
         {% endif %}
-        {% if service != 'zoomdata-consul' %}
+        {% if service != 'composer-consul' %}
             {% do configs.update({
                 service: {
-                    'path': salt['file.join'](zoomdata.config_dir, file),
+                    'path': salt['file.join'](composer.config_dir, file),
                     'properties': props,
                 }
             }) %}
         {% endif %}
     {% endfor %}
-    {% do zoomdata.config.update(salt['defaults.merge'](zoomdata.config, configs)) %}
+    {% do composer.config.update(salt['defaults.merge'](composer.config, configs)) %}
 {% endif %}
 
 {# Read global PostgreSQL configuration for Salt #}
@@ -209,7 +209,7 @@
 #}
 {% set postgres = {
     'connection_uri': '',
-    'zoomdata_properties': (
+    'composer_properties': (
         (
             'spring.datasource.url',
             'spring.datasource.username',
@@ -226,7 +226,7 @@
             'upload.destination.params.password'
         ),
     ),
-    'zoomdata-query-engine_properties': (
+    'composer-query-engine_properties': (
         (
             'spring.qe.datasource.jdbcUrl',
             'spring.qe.datasource.username',
@@ -237,12 +237,12 @@
     'password': pg_pass,
 } %}
 
-{# Read PostgreSQL connection details for the Zoomdata services
+{# Read PostgreSQL connection details for the Composer services
    from the environment variables. #}
-{% set pg_host = salt['environ.get']('ZOOMDATA_POSTGRES_HOST', pg_host) %}
-{% set pg_port = salt['environ.get']('ZOOMDATA_POSTGRES_PORT', pg_port) %}
-{% set zd_user = salt['environ.get']('ZOOMDATA_POSTGRES_USER') %}
-{% set zd_pass = salt['environ.get']('ZOOMDATA_POSTGRES_PASS') %}
+{% set pg_host = salt['environ.get']('COMPOSER_POSTGRES_HOST', pg_host) %}
+{% set pg_port = salt['environ.get']('COMPOSER_POSTGRES_PORT', pg_port) %}
+{% set zd_user = salt['environ.get']('COMPOSER_POSTGRES_USER') %}
+{% set zd_pass = salt['environ.get']('COMPOSER_POSTGRES_PASS') %}
 
 {# This is used to manage databases during metadata restoration.
    Automated restoration to remote PostgreSQL host is supported only when
@@ -259,18 +259,18 @@
         {% set srv_name = service|replace('_properties', '') %}
         {% for i in postgres[service] %}
             {% if pg_host %}
-                {% set db = zoomdata.config[srv_name].properties[i[0]].rsplit('/', 1)[1] %}
-                {% do zoomdata.config[srv_name].properties.update({
+                {% set db = composer.config[srv_name].properties[i[0]].rsplit('/', 1)[1] %}
+                {% do composer.config[srv_name].properties.update({
                     i[0]: 'jdbc:postgresql://%s:%s/%s'|format(pg_host, pg_port, db),
                 }) %}
             {% endif %}
 
             {% if zd_user %}
-                {% do zoomdata.config[srv_name].properties.update({i[1]: zd_user}) %}
+                {% do composer.config[srv_name].properties.update({i[1]: zd_user}) %}
             {% endif %}
 
             {% if zd_pass %}
-                {% do zoomdata.config[srv_name].properties.update({i[2]: zd_pass}) %}
+                {% do composer.config[srv_name].properties.update({i[2]: zd_pass}) %}
             {% endif %}
         {% endfor %}
     {% endif %}

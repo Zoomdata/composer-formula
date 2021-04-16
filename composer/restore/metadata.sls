@@ -1,18 +1,18 @@
-{%- from 'zoomdata/map.jinja' import zoomdata, postgres with context %}
+{%- from 'composer/map.jinja' import composer, postgres with context %}
 
-{%- if zoomdata.restore['dir']
+{%- if composer.restore['dir']
    and (not postgres['connection_uri']
         or (postgres['connection_uri'] and postgres['password'])
        ) %}
 
 include:
-  - zoomdata.services.stop
+  - composer.services.stop
 
-  {%- for service in zoomdata.backup['services'] %}
-    {%- set config = zoomdata.config.get(service, {}).properties|
+  {%- for service in composer.backup['services'] %}
+    {%- set config = composer.config.get(service, {}).properties|
                      default({}, true) %}
 
-    {%- for properties in postgres.zoomdata_properties %}
+    {%- for properties in postgres.composer_properties %}
       {#- The full set of properties: url, user and pw need to be configured #}
       {%- set has_properties = [true] %}
       {%- for property in properties %}
@@ -29,29 +29,29 @@ include:
   postgres_user.present:
     - name: {{ user }}
     - password: {{ password }}
-    - user: {{ zoomdata.restore['user'] }}
+    - user: {{ composer.restore['user'] }}
 
       {%- endif %}
     {%- endfor %}
 
   {%- endfor %}
 
-zoomdata_backup_decompressor:
+composer_backup_decompressor:
   pkg.installed:
-    - name: {{ zoomdata.backup['compressor'] }}
+    - name: {{ composer.backup['compressor'] }}
 
-  {%- for dump in salt['file.readdir'](zoomdata.restore['dir']) %}
-    {%- if dump.endswith(zoomdata.backup['comp_ext']) %}
+  {%- for dump in salt['file.readdir'](composer.restore['dir']) %}
+    {%- if dump.endswith(composer.backup['comp_ext']) %}
 
-zoomdata_restore_{{ salt['file.basename'](zoomdata.restore['dir']) }}_{{ dump }}:
+composer_restore_{{ salt['file.basename'](composer.restore['dir']) }}_{{ dump }}:
   cmd.run:
     - name: >-
-        {{ zoomdata.backup['compressor'] }}
-        --decompress --stdout {{ zoomdata.backup['comp_opts'] }}
+        {{ composer.backup['compressor'] }}
+        --decompress --stdout {{ composer.backup['comp_opts'] }}
         {{ dump }} |
-        {{ zoomdata.restore['bin'] }} {{ postgres.connection_uri }}
-    - cwd: "{{ zoomdata.restore['dir'] }}"
-    - runas: {{ zoomdata.restore['user'] }}
+        {{ composer.restore['bin'] }} {{ postgres.connection_uri }}
+    - cwd: "{{ composer.restore['dir'] }}"
+    - runas: {{ composer.restore['user'] }}
       {#- The password is required for remote connections #}
       {%- if postgres.password %}
     - env:
@@ -59,17 +59,17 @@ zoomdata_restore_{{ salt['file.basename'](zoomdata.restore['dir']) }}_{{ dump }}
       - PGPASSWORD: {{ postgres.password|yaml() }}
       {%- endif %}
     - require:
-      - sls: zoomdata.services.stop
-      - pkg: zoomdata_backup_decompressor
+      - sls: composer.services.stop
+      - pkg: composer_backup_decompressor
 
     {%- endif %}
   {%- endfor %}
 
 {%- else %}
 
-zoomdata_restore:
+composer_restore:
   test.fail_without_changes:
-   - name: 'Please define `zoomdata:restore:dir` Pillar value.'
+   - name: 'Please define `composer:restore:dir` Pillar value.'
    - failhard: True
 
 {%- endif %}

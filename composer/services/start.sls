@@ -1,6 +1,6 @@
-{%- from 'zoomdata/map.jinja' import init_available,
+{%- from 'composer/map.jinja' import init_available,
                                      packages,
-                                     zoomdata with context %}
+                                     composer with context %}
 
 {%- if init_available %}
 
@@ -14,23 +14,23 @@ systemctl_reload:
 
   {%- for service in packages %}
 
-    {%- if service in zoomdata['services'] %}
+    {%- if service in composer['services'] %}
 
 {{ service }}_start_enable:
-  {%- if service == 'zoomdata-edc-all' %}
-  zoomdata.edc_running:
+  {%- if service == 'composer-edc-all' %}
+  composer.edc_running:
   {%- else %}
   service.running:
   {%- endif %}
     - name: {{ service }}
     - enable: True
-  {%- if service.startswith('zoomdata-edc-') and zoomdata.edc.probe['timeout'] %}
-    {%- if service != 'zoomdata-edc-all' %}
-  zoomdata.service_probe:
+  {%- if service.startswith('composer-edc-') and composer.edc.probe['timeout'] %}
+    {%- if service != 'composer-edc-all' %}
+  composer.service_probe:
     - name: {{ service }}
     {%- endif %}
-    - url_path: {{ zoomdata.edc.probe['path'] }}
-    - timeout: {{ zoomdata.edc.probe['timeout'] }}
+    - url_path: {{ composer.edc.probe['path'] }}
+    - timeout: {{ composer.edc.probe['timeout'] }}
   {%- endif %}
 
     {%- endif %}
@@ -39,7 +39,7 @@ systemctl_reload:
 
 {%- else %}
 
-# Try to enable Zoomdata services in "manual" way if Salt ``service`` state
+# Try to enable Composer services in "manual" way if Salt ``service`` state
 # module is currently not available (e.g. during Docker or Packer build when
 # there is no init system running).
 

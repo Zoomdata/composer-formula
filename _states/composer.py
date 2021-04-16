@@ -2,7 +2,7 @@
 
 # pylint: disable=line-too-long
 """
-Zoomdata states.
+Composer states.
 
 Branding
 ========
@@ -11,14 +11,14 @@ Example:
 
 .. code-block:: yaml
 
-    zoomdata-branding:
-      zoomdata.branding:
-        - name: http://localhost:8080/zoomdata/api/
+    composer-branding:
+      composer.branding:
+        - name: http://localhost:8080/composer/api/
         - username: supervisor
         - password: Secure_Pas5
         - css: http://example.com/custom.css
-        - login_logo: salt://branding/files/Zoomdata.svg
-        - json_file: salt://zoomdata/files/custom-ui-payload-sample.json
+        - login_logo: salt://branding/files/Composer.svg
+        - json_file: salt://composer/files/custom-ui-payload-sample.json
 
 Initial Passwords
 =================
@@ -27,9 +27,9 @@ Example:
 
 .. code-block:: yaml
 
-    zoomdata-setup-passwords:
-      zoomdata.init_users:
-        - name: http://localhost:8080/zoomdata/api/
+    composer-setup-passwords:
+      composer.init_users:
+        - name: http://localhost:8080/composer/api/
         - users:
             admin: Admin_Pas5
             supervisor: Super_Pas5
@@ -41,9 +41,9 @@ Example:
 
 .. code-block:: yaml
 
-    zoomdata-license:
-      zoomdata.licensing:
-        - name: http://localhost:8080/zoomdata/api/
+    composer-license:
+      composer.licensing:
+        - name: http://localhost:8080/composer/api/
         - username: supervisor
         - password: Secure_Pas5
         - url: http://licensing.server/api
@@ -60,9 +60,9 @@ Example:
 
 .. code-block:: yaml
 
-    zoomdata-edc-mysql-libs:
-      zoomdata.libraries:
-        - name: zoomdata-edc-mysql
+    composer-edc-mysql-libs:
+      composer.libraries:
+        - name: composer-edc-mysql
         - urls:
           - 'https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/1.3.2/mariadb-java-client-1.3.2.jar'
 """
@@ -129,28 +129,28 @@ def branding(name,
              login_logo=None,
              json_file=None):
     """
-    Upload custom content files into the Zoomdata server.
+    Upload custom content files into the Composer server.
 
     name
-        The Zoomdata server API URL to install licence into. For example:
-        ``http://localhost:8080/zoomdata/api/``
+        The Composer server API URL to install licence into. For example:
+        ``http://localhost:8080/composer/api/``
 
     username
-        The Zoomdata server user authorized to inject files, i.e. ``supervisor``
+        The Composer server user authorized to inject files, i.e. ``supervisor``
 
     password
         User password
 
     css
-        The URI to the file containing custom CSS to apply on the Zoomdata UI
+        The URI to the file containing custom CSS to apply on the Composer UI
 
     login_logo
         The URI to the file containing PNG or SVG image to use as login screen
-        logo for the Zoomdata server
+        logo for the Composer server
 
     json_file
         The URI to the JSON file with branding settings to apply on the
-        Zoomdata UI
+        Composer UI
     """
     ret = {
         'name': name,
@@ -164,7 +164,7 @@ def branding(name,
 
     # pylint: disable=undefined-variable
     if __opts__['test']:
-        ret['comment'] = 'The state will set custom branding for the Zoomdata at {0}'.format(name)
+        ret['comment'] = 'The state will set custom branding for the Composer at {0}'.format(name)
         ret['result'] = None
         return ret
 
@@ -172,9 +172,9 @@ def branding(name,
 
     if css:
         headers, data = _file_data_encode(css)
-        zoomdata_api = _urljoin(name, 'branding/customCss')
+        composer_api = _urljoin(name, 'branding/customCss')
         res = http.query(
-            zoomdata_api,
+            composer_api,
             method='POST',
             username=username,
             password=password,
@@ -187,9 +187,9 @@ def branding(name,
 
     if login_logo:
         headers, data = _file_data_encode(login_logo)
-        zoomdata_api = _urljoin(name, 'branding/loginLogo')
+        composer_api = _urljoin(name, 'branding/loginLogo')
         res = http.query(
-            zoomdata_api,
+            composer_api,
             method='POST',
             username=username,
             password=password,
@@ -203,18 +203,18 @@ def branding(name,
         logo_id = res['text']
 
     if json_file:
-        zoomdata_api = _urljoin(name, 'branding')
+        composer_api = _urljoin(name, 'branding')
         jf_ = __salt__['cp.get_file_str'](json_file)
         if logo_id:
             payload = json.loads(jf_)
             payload.update({'loginLogo': logo_id})
             jf_ = json.dumps(payload)
         res = http.query(
-            zoomdata_api,
+            composer_api,
             method='POST',
             username=username,
             password=password,
-            header_dict=__salt__['defaults.get']('zoomdata:zoomdata:setup:headers'),
+            header_dict=__salt__['defaults.get']('composer:composer:setup:headers'),
             data=jf_
         )
     # pylint: enable=undefined-variable
@@ -231,11 +231,11 @@ def branding(name,
 def init_users(name,
                users):
     """
-    Intialize default users for the Zoomdata server.
+    Intialize default users for the Composer server.
 
     name
-        The Zoomdata server API URL to install licence into. For example:
-        ``http://localhost:8080/zoomdata/api/``
+        The Composer server API URL to install licence into. For example:
+        ``http://localhost:8080/composer/api/``
 
     users
         A dictionary with usernames as keys and passwords as respective values
@@ -251,12 +251,12 @@ def init_users(name,
     # pylint: disable=undefined-variable
     if __opts__['test']:
         ret['comment'] = \
-            'The state will init default passwords for the Zoomdata at {0}'.format(name)
+            'The state will init default passwords for the Composer at {0}'.format(name)
         ret['result'] = None
         return ret
 
-    init = __salt__['defaults.get']('zoomdata:zoomdata:setup:init')
-    headers = __salt__['defaults.get']('zoomdata:zoomdata:setup:headers')
+    init = __salt__['defaults.get']('composer:composer:setup:init')
+    headers = __salt__['defaults.get']('composer:composer:setup:headers')
     # pylint: enable=undefined-variable
 
     user_api = _urljoin(name, 'user')
@@ -311,14 +311,14 @@ def licensing(name,
               concurrency='PS',
               force=False):
     """
-    Retrieve and install license into the Zoomdata server.
+    Retrieve and install license into the Composer server.
 
     name
-        The Zoomdata server URL to install licence into. For example:
-        ``http://localhost:8080/zoomdata/api/``
+        The Composer server URL to install licence into. For example:
+        ``http://localhost:8080/composer/api/``
 
     username
-        The Zoomdata server user authorized to inject files, i.e. ``supervisor``
+        The Composer server user authorized to inject files, i.e. ``supervisor``
 
     password
         User password
@@ -357,17 +357,17 @@ def licensing(name,
 
     # pylint: disable=undefined-variable
     if __opts__['test']:
-        ret['comment'] = 'The state will retrive license for the Zoomdata at {0}'.format(name)
+        ret['comment'] = 'The state will retrive license for the Composer at {0}'.format(name)
         ret['result'] = None
         return ret
 
-    headers = __salt__['defaults.get']('zoomdata:zoomdata:setup:headers')
+    headers = __salt__['defaults.get']('composer:composer:setup:headers')
     # pylint: enable=undefined-variable
 
-    # Retrive Zoomdata instance ID and current license type
-    zoomdata_api = _urljoin(name, 'license')
+    # Retrive Composer instance ID and current license type
+    composer_api = _urljoin(name, 'license')
     res = http.query(
-        zoomdata_api,
+        composer_api,
         username=username,
         password=password,
         header_dict=headers,
@@ -409,7 +409,7 @@ def licensing(name,
 
     # Install license key
     res = http.query(
-        zoomdata_api,
+        composer_api,
         method='POST',
         username=username,
         password=password,
@@ -458,7 +458,7 @@ def edc_installed(name, **kwargs):
     # This will not work on Salt earlier than 2017.7 for APT-based distros
     if supported_by_salt:
         __salt__['pkg.refresh_db']()
-        pkgs = __salt__['zoomdata.list_pkgs_edc'](from_repo=True)
+        pkgs = __salt__['composer.list_pkgs_edc'](from_repo=True)
         ret = __states__['pkg.installed'](name, pkgs=pkgs, **kwargs)
     # pylint: enable=undefined-variable
 
@@ -470,7 +470,7 @@ def service_probe(name, url_path, timeout=None, retry_interval=5):
     Probe if service has been started successfully.
 
     name
-        The name of the Zoomdata service package
+        The name of the Composer service package
 
     url_path
         The URL path to service health HTTP endpoint. Used to check if the
@@ -497,9 +497,9 @@ def service_probe(name, url_path, timeout=None, retry_interval=5):
         ret['result'] = None
         return ret
 
-    service = name.replace('zoomdata-', '', 1)
-    prefix = __salt__['defaults.get']('zoomdata:zoomdata:prefix')
-    port = __salt__['zoomdata.properties'](
+    service = name.replace('composer-', '', 1)
+    prefix = __salt__['defaults.get']('composer:composer:prefix')
+    port = __salt__['composer.properties'](
         __salt__['file.join'](prefix, 'conf', '{}.properties'.format(service))
     )['server.port']
 
@@ -557,7 +557,7 @@ def edc_running(name, url_path=None, timeout=None, **kwargs):
         ret['result'] = None
         return ret
 
-    services = [i for i in __salt__['zoomdata.services']() if i.startswith('zoomdata-edc-')]
+    services = [i for i in __salt__['composer.services']() if i.startswith('composer-edc-')]
     for service in services:
         res = __states__['service.running'](service, **kwargs)
         # pylint: enable=undefined-variable
@@ -584,21 +584,21 @@ def libraries(name,
               metadata_path='docs',
               install_path='lib'):
     """
-    Retrieve and install external jar files for Zoomdata service.
+    Retrieve and install external jar files for Composer service.
 
     name
-        The name of the Zoomdata service
+        The name of the Composer service
 
     urls
         List of URL links to download library files from. If not provided,
         try to read package metadata file and obtain the URLs from there.
 
     metadata_path
-        The subdirectory relative to the Zoomdata installation path where the
+        The subdirectory relative to the Composer installation path where the
         metadata file installed
 
     install_path
-        The subdirectory relative to the Zoomdata installation path where the
+        The subdirectory relative to the Composer installation path where the
         library files will be downloaded
     """
     ret = {
@@ -615,14 +615,14 @@ def libraries(name,
         ret['result'] = None
         return ret
 
-    prefix = __salt__['defaults.get']('zoomdata:zoomdata:prefix')
+    prefix = __salt__['defaults.get']('composer:composer:prefix')
 
     services = [name]
 
-    if 'zoomdata-edc-all' in services:
-        services = __salt__['zoomdata.list_pkgs_edc']()
+    if 'composer-edc-all' in services:
+        services = __salt__['composer.list_pkgs_edc']()
 
-    services = [i.replace('zoomdata-', '', 1) for i in services]
+    services = [i.replace('composer-', '', 1) for i in services]
 
     comments = []
     res = {}

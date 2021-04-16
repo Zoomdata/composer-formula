@@ -1,13 +1,13 @@
 ================
-zoomdata-formula
+composer-formula
 ================
 
-Install, configure and run the Zoomdata services.
+Install, configure and run the Composer services.
 
 **IMPORTANT!**
 
 This code is experimental and still in development. It is not officially
-supported by Zoomdata, Inc. and provided for evaluation purposes only.
+supported by Logi Analytics, Inc. and provided for evaluation purposes only.
 
 **NOTE**
 
@@ -20,83 +20,83 @@ Available states
 .. contents::
     :local:
 
-``zoomdata``
+``composer``
 ------------
 
-Bootstrap the Zoomdata services from scratch or upgrade existing installation.
+Bootstrap the Composer services from scratch or upgrade existing installation.
 
-``zoomdata.backup``
+``composer.backup``
 -------------------
 
-Make backup of the Zoomdata installation state and metadata (PostgreSQL)
+Make backup of the Composer installation state and metadata (PostgreSQL)
 databases.
 
-``zoomdata.backup.layout``
+``composer.backup.layout``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Prepare a directory on local filesystem to store backups.
 
-``zoomdata.backup.metadata``
+``composer.backup.metadata``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Write compressed dumps of PostgreSQL databases.
 
-``zoomdata.backup.retension``
+``composer.backup.retension``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Remove old backups. Keep last 10 by default.
 
-``zoomdata.backup.state``
+``composer.backup.state``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Write a Pillar SLS file that describes current Zoomdata installation state.
+Write a Pillar SLS file that describes current Composer installation state.
 
-``zoomdata.remove``
+``composer.remove``
 -------------------
 
-Disable the Zoomdata services and uninstall the Zoomdata packages.
+Disable the Composer services and uninstall the Composer packages.
 
-``zoomdata.repo``
+``composer.repo``
 -----------------
 
-Configure package repositories for installing the Zoomdata packages.
+Configure package repositories for installing the Composer packages.
 
-``zoomdata.restore``
+``composer.restore``
 --------------------
 
-Restore the Zoomdata installation from previously made backup.
+Restore the Composer installation from previously made backup.
 
-``zoomdata.restore.metadata``
+``composer.restore.metadata``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Restore the Zoomdata databases in a PostgreSQL cluster.
+Restore the Composer databases in a PostgreSQL cluster.
 
-``zoomdata.services``
+``composer.services``
 ---------------------
 
-Install, configure, enable and start the Zoomdata services.
+Install, configure, enable and start the Composer services.
 
-``zoomdata.services.install``
+``composer.services.install``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Install the Zoomdata packages and write the configuration files.
+Install the Composer packages and write the configuration files.
 
-``zoomdata.services.start``
+``composer.services.start``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Start the Zoomdata services.
+Start the Composer services.
 
-``zoomdata.services.stop``
+``composer.services.stop``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Stop the Zoomdata services.
+Stop the Composer services.
 
-``zoomdata.setup``
+``composer.setup``
 ------------------
 
-Setup initial runtime parameters for the Zoomdata server.
+Setup initial runtime parameters for the Composer server.
 
-``zoomdata.tools``
+``composer.tools``
 ------------------
 
 Install additional explicitly defined packages from ``tools`` repository.

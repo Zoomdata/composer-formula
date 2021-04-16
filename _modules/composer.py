@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Manage and inspect the Zoomdata installation.
+Manage and inspect the Composer installation.
 
 :depends:       urlparse@Py2/urllib.parse@Py3
 :platform:      GNU/Linux
@@ -19,19 +19,17 @@ from distutils.version import LooseVersion, StrictVersion
 log = logging.getLogger(__name__)
 
 ENVIRONMENT = {
-    'zoomdata': '/etc/zoomdata/zoomdata.env',
-    'zoomdata-query-engine': '/etc/zoomdata/query-engine.env',
-    'zoomdata-scheduler': '/etc/zoomdata/scheduler.env',
+    'composer': '/etc/composer/composer.env',
+    'composer-query-engine': '/etc/composer/query-engine.env'
 }
 
 PROPERTIES = {
-    'zoomdata': '/etc/zoomdata/zoomdata.properties',
-    'zoomdata-query-engine': '/etc/zoomdata/query-engine.properties',
-    'zoomdata-scheduler': '/etc/zoomdata/scheduler.properties',
+    'composer': '/etc/composer/composer.properties',
+    'composer-query-engine': '/etc/composer/query-engine.properties'
 }
 
-ZOOMDATA = 'zoomdata'
-EDC = 'zoomdata-edc'
+COMPOSER_BASE_NAME = 'composer'
+EDC_NAME_NAME = 'composer-edc'
 
 
 def _parse_ini(path, chars=(' \'"')):
@@ -59,9 +57,9 @@ def _parse_ini(path, chars=(' \'"')):
     return None
 
 
-def environment(path=ENVIRONMENT['zoomdata']):
+def environment(path=ENVIRONMENT['composer']):
     """
-    Display Zoomdata environment variables as dictionary.
+    Display Composer environment variables as dictionary.
 
     Returns ``None`` if environment file cannot be read.
 
@@ -72,14 +70,14 @@ def environment(path=ENVIRONMENT['zoomdata']):
 
     .. code-block:: bash
 
-        salt '*' zoomdata.environment
+        salt '*' composer.environment
     """
     return _parse_ini(path)
 
 
-def properties(path=PROPERTIES['zoomdata']):
+def properties(path=PROPERTIES['composer']):
     """
-    Display Zoomdata properties as dictionary.
+    Display Composer properties as dictionary.
 
     Returns ``None`` if property file cannot be read.
 
@@ -90,24 +88,24 @@ def properties(path=PROPERTIES['zoomdata']):
 
     .. code-block:: bash
 
-        salt '*' zoomdata.properties
+        salt '*' composer.properties
     """
     return _parse_ini(path)
 
 
 def list_repos(compact=False):
     """
-    List the Zoomdata repositories which are locally configured.
+    List the Composer repositories which are locally configured.
 
     compact : False
-        Set ``True`` to get compact dictionary containing the Zoomdata
+        Set ``True`` to get compact dictionary containing the Composer
         repositories configuration
 
     CLI Example:
 
     .. code-block:: bash
 
-        salt '*' zoomdata.list_repos
+        salt '*' composer.list_repos
     """
     repo_config = {
         'base_url': None,
@@ -119,7 +117,7 @@ def list_repos(compact=False):
 
     repos = {k: v for (k, v) in
              __salt__['pkg.list_repos']().items()  # pylint: disable=undefined-variable
-             if k.startswith(ZOOMDATA)}
+             if k.startswith(COMPOSER_BASE_NAME)}
 
     if not compact:
         return repos
@@ -142,7 +140,7 @@ def list_repos(compact=False):
             pass
 
         repo_root = url.path.split('/')[1]
-        log.debug("zoomdata.list_repos: Processing repo_root: %s" % repo_root)
+        log.debug("composer.list_repos: Processing repo_root: %s" % repo_root)
         try:
             if repo_root == 'latest':
                 repo_config['release'] = repo_root
@@ -170,7 +168,7 @@ def list_repos(compact=False):
 
 def list_pkgs(include_edc=True, include_microservices=True, include_tools=True):
     """
-    List currently installed Zoomdata packages.
+    List currently installed Composer packages.
 
     include_edc : True
         Include EDC packages as well
@@ -185,10 +183,10 @@ def list_pkgs(include_edc=True, include_microservices=True, include_tools=True):
 
     .. code-block:: bash
 
-        salt '*' zoomdata.list_pkgs include_tools=False
+        salt '*' composer.list_pkgs include_tools=False
     """
     # pylint: disable=undefined-variable
-    zd_pkgs = [i for i in __salt__['pkg.list_pkgs']() if i.startswith(ZOOMDATA)]
+    zd_pkgs = [i for i in __salt__['pkg.list_pkgs']() if i.startswith(COMPOSER_BASE_NAME)]
 
     if not include_edc:
         zd_pkgs = list(set(zd_pkgs) - set(list_pkgs_edc()))
@@ -204,7 +202,7 @@ def list_pkgs(include_edc=True, include_microservices=True, include_tools=True):
 
 def list_pkgs_edc(from_repo=False):
     """
-    List available Zoomdata EDC (data connector) packages.
+    List available Composer EDC (data connector) packages.
 
     from_repo : False
         By default, return only locally installed packages. If set ``True``,
@@ -214,30 +212,30 @@ def list_pkgs_edc(from_repo=False):
 
     .. code-block:: bash
 
-        salt '*' zoomdata.list_pkgs_edc
+        salt '*' composer.list_pkgs_edc
     """
     # pylint: disable=undefined-variable
     if from_repo:
         edc_pkgs = list(__salt__['pkg.list_repo_pkgs'](EDC + '-*'))
     else:
-        edc_pkgs = [i for i in __salt__['pkg.list_pkgs']() if i.startswith(EDC)]
+        edc_pkgs = [i for i in __salt__['pkg.list_pkgs']() if i.startswith(EDC_BASE_NAME)]
 
     return sorted(edc_pkgs)
 
 
 def list_pkgs_microservices():
     """
-    List only currently installed Zoomdata microservice packages.
+    List only currently installed Composer microservice packages.
 
     CLI Example:
 
     .. code-block:: bash
 
-        salt '*' zoomdata.list_pkgs_microservices
+        salt '*' composer.list_pkgs_microservices
     """
     # pylint: disable=undefined-variable
-    m_s = __salt__['defaults.get']('zoomdata:zoomdata:microservices:packages', [])
-    m_s.extend(__salt__['pillar.get']('zoomdata:microservices:packages') or [])
+    m_s = __salt__['defaults.get']('composer:composer:microservices:packages', [])
+    m_s.extend(__salt__['pillar.get']('composer:microservices:packages') or [])
     ms_pkgs = [i for i in __salt__['pkg.list_pkgs']() if i in list(set(m_s))]
 
     return sorted(ms_pkgs)
@@ -245,24 +243,24 @@ def list_pkgs_microservices():
 
 def list_pkgs_tools():
     """
-    List only currently installed Zoomdata tool packages.
+    List only currently installed Composer tool packages.
 
     CLI Example:
 
     .. code-block:: bash
 
-        salt '*' zoomdata.list_pkgs_tools
+        salt '*' composer.list_pkgs_tools
     """
     # pylint: disable=undefined-variable
     tools = [i for i in __salt__['pkg.list_pkgs']()
-             if i.startswith(ZOOMDATA) and i not in __salt__['service.get_all']()]
+             if i.startswith(COMPOSER_BASE_NAME) and i not in __salt__['service.get_all']()]
 
     return sorted(tools)
 
 
 def version(full=True):
     """
-    Display Zoomdata packages version.
+    Display Composer packages version.
 
     full : True
         Return full version. If set False, return only short version (X.Y.Z).
@@ -271,23 +269,21 @@ def version(full=True):
 
     .. code-block:: bash
 
-        salt '*' zoomdata.version
+        salt '*' composer.version
     """
     zd_version = ''
-    zd_pkgs = list_pkgs(include_tools=False)
-    for pkg in zd_pkgs:
-        # pylint: disable=undefined-variable
-        zd_version = __salt__['pkg.version'](pkg)
-        if not full:
-            return zd_version.split('-')[0]
-        break
+    zd_pkgs = list_pkgs(include_edc=False, include_tools=False)
+    if not zd_pkgs:
+        return zd_version
 
-    return zd_version
+    # pylint: disable=undefined-variable
+    zd_version = __salt__['pkg.version'](zd_pkgs[0])
+    return zd_version.split('-')[0] if not full else zd_version
 
 
 def version_edc(full=True):
     """
-    Display Zoomdata EDC (datasource connector) packages version.
+    Display Composer EDC (datasource connector) packages version.
 
     CLI Example:
 
@@ -296,23 +292,22 @@ def version_edc(full=True):
 
     .. code-block:: bash
 
-        salt '*' zoomdata.version_edc
+        salt '*' composer.version_edc
     """
     edc_version = ''
     edc_pkgs = list_pkgs_edc()
-    for pkg in edc_pkgs:
-        # pylint: disable=undefined-variable
-        edc_version = __salt__['pkg.version'](pkg)
-        if not full:
-            return edc_version.split('-')[0]
-        break
 
-    return edc_version
+    if not edc_pkgs:
+        return edc_version
+
+    # pylint: disable=undefined-variable
+    edc_version = __salt__['pkg.version'](edc_pkgs[0])
+    return edc_version.split('-')[0] if not full else edc_version
 
 
 def version_microservices(full=True):
     """
-    Display Zoomdata microservice packages version.
+    Display Composer microservice packages version.
 
     CLI Example:
 
@@ -321,23 +316,22 @@ def version_microservices(full=True):
 
     .. code-block:: bash
 
-        salt '*' zoomdata.version_microservices
+        salt '*' composer.version_microservices
     """
     ms_version = ''
     ms_pkgs = list_pkgs_microservices()
-    for pkg in ms_pkgs:
-        # pylint: disable=undefined-variable
-        ms_version = __salt__['pkg.version'](pkg)
-        if not full:
-            return ms_version.split('-')[0]
-        break
 
-    return ms_version
+    if not ms_pkgs:
+        return ms_version
+
+    # pylint: disable=undefined-variable
+    ms_version = __salt__['pkg.version'](pkg)
+    return ms_version.split('-')[0] if not full else ms_version
 
 
 def version_tools(full=True):
     """
-    Display Zoomdata tool packages version.
+    Display Composer tool packages version.
 
     CLI Example:
 
@@ -346,23 +340,22 @@ def version_tools(full=True):
 
     .. code-block:: bash
 
-        salt '*' zoomdata.version_tools
+        salt '*' composer.version_tools
     """
     t_version = ''
     tools = list_pkgs_tools()
-    for pkg in tools:
-        # pylint: disable=undefined-variable
-        t_version = __salt__['pkg.version'](pkg)
-        if not full:
-            return t_version.split('-')[0]
-        break
 
-    return t_version
+    if not tools:
+        return t_version
+
+    # pylint: disable=undefined-variable
+    t_version = __salt__['pkg.version'](tools[0])
+    return t_version.split('-')[0] if not full else t_version
 
 
 def services(running=False):
     """
-    Return a list of available Zoomdata services.
+    Return a list of available Composer services.
 
     running : False
         Return only running services
@@ -371,23 +364,23 @@ def services(running=False):
 
     .. code-block:: bash
 
-        salt '*' zoomdata.services true
+        salt '*' composer.services true
     """
     # pylint: disable=undefined-variable
     zd_services = []
     for srv in __salt__['service.get_all']():
-        if srv.startswith(ZOOMDATA):
+        if srv.startswith(COMPOSER_BASE_NAME):
             if running:
                 if __salt__['service.status'](srv):
                     zd_services.append(srv)
             else:
                 zd_services.append(srv)
 
-    if ZOOMDATA in zd_services:
-        # Put zoomdata service to the end of the list,
+    if COMPOSER_BASE_NAME in zd_services:
+        # Put composer service to the end of the list,
         # because it is better to be started last
-        zd_services.remove(ZOOMDATA)
-        zd_services.append(ZOOMDATA)
+        zd_services.remove(COMPOSER_BASE_NAME)
+        zd_services.append(COMPOSER_BASE_NAME)
 
     return zd_services
 
@@ -396,14 +389,14 @@ def inspect(limits=False,
             versions=False,
             full=True):
     """
-    Inspect Zoomdata installation and return info as dictionary.
+    Inspect Composer installation and return info as dictionary.
 
     limits : False
         Detect system limits. Currently not implemented, so this parameter
         just returns ``None`` for ``limits`` key.
 
     versions : False
-        Include exact versions of Zoomdata and EDC installed
+        Include exact versions of Composer and EDC installed
 
     full : True
         Return full version. If set False, return only short version (X.Y.Z).
@@ -413,13 +406,13 @@ def inspect(limits=False,
 
     .. code-block:: bash
 
-        salt --out=yaml '*' zoomdata.inspect
+        salt --out=yaml '*' composer.inspect
     """
     ret = {}
     env = {}
     config = {}
 
-    ret[ZOOMDATA] = list_repos(compact=True)
+    ret[COMPOSER_BASE_NAME] = list_repos(compact=True)
 
     for service in ENVIRONMENT:
         parsed_env = environment(ENVIRONMENT[service])
@@ -445,7 +438,7 @@ def inspect(limits=False,
         else:
             config[service] = None
 
-    ret[ZOOMDATA].update(
+    ret[COMPOSER_BASE_NAME].update(
         {
             'packages': list_pkgs(include_edc=False,
                                   include_microservices=False,
@@ -468,23 +461,23 @@ def inspect(limits=False,
     if limits:
         # TO DO: implement reading limits.
         # Just skip limits configuration for now to omit defaults.
-        ret[ZOOMDATA].update({
+        ret[COMPOSER_BASE_NAME].update({
             'limits': None,
         })
 
     if versions:
-        ret[ZOOMDATA].update({
+        ret[COMPOSER_BASE_NAME].update({
             'version': version(full=full),
         })
-        ret[ZOOMDATA]['edc'].update({
+        ret[COMPOSER_BASE_NAME]['edc'].update({
             'version': version_edc(full=full),
         })
-        ret[ZOOMDATA]['microservices'].update({
+        ret[COMPOSER_BASE_NAME]['microservices'].update({
             # The auxiliary services usually do not share package iteration
             # (build) number, so we strip it off
             'version': version_microservices(full=False),
         })
-        ret[ZOOMDATA]['tools'].update({
+        ret[COMPOSER_BASE_NAME]['tools'].update({
             'version': version_tools(full=full),
         })
 

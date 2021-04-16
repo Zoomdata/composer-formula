@@ -1,15 +1,15 @@
-{%- from 'zoomdata/map.jinja' import init_available,
+{%- from 'composer/map.jinja' import init_available,
                                      packages,
-                                     zoomdata with context %}
+                                     composer with context %}
 
 {%- if init_available %}
 
-  {%- set services = zoomdata.local['services'] %}
-  {%- if 'zoomdata-consul' in services %}
-    {#- The ``zoomdata-consul`` is a special kind of service
+  {%- set services = composer.local['services'] %}
+  {%- if 'composer-consul' in services %}
+    {#- The ``composer-consul`` is a special kind of service
         and should be stopped last. #}
-    {%- do services.remove('zoomdata-consul') %}
-    {%- do services.append('zoomdata-consul') %}
+    {%- do services.remove('composer-consul') %}
+    {%- do services.append('composer-consul') %}
   {%- endif %}
 
   {%- for service in services %}
@@ -17,7 +17,7 @@
 {{ service }}_stop_disable:
   service.dead:
     - name: {{ service }}
-    - disabled: {{ service not in zoomdata['services'] }}
+    - disabled: {{ service not in composer['services'] }}
 
   {%- endfor %}
 
