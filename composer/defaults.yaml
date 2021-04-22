@@ -11,7 +11,7 @@ composer:
 
   # Defaults which could be overridden in Pillar
   base_url: 'https://composer-repo.logianalytics.com'
-  gpgkey: 'https://composer-repo.logianalytics.com/COMPOSER-GPG-KEY.pub'
+  gpgkey: 'https://composer-repo.logianalytics.com/ZOOMDATA-GPG-KEY.pub'
   release: '6.8'
   repositories:
     - tools
