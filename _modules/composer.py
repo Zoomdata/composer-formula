@@ -29,7 +29,7 @@ PROPERTIES = {
 }
 
 COMPOSER_BASE_NAME = 'composer'
-EDC_NAME_NAME = 'composer-edc'
+EDC_BASE_NAME = 'composer-edc'
 
 
 def _parse_ini(path, chars=(' \'"')):
